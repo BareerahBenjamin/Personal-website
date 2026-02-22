@@ -28,9 +28,7 @@
 
 ## 线上地址
 
-- 主域名：https://bareerahweb.com （或你实际部署的域名）
-- 默认 Pages 预览：https://bareerah-bbs.[你的用户名].pages.dev （Cloudflare Pages）
-- Vercel 预览（可选）：https://bareerah-bbs-[随机id].vercel.app
+- Vercel ：https://personal-website-ten-alpha-51.vercel.app/
 
 ## 快速开始（本地开发）
 
