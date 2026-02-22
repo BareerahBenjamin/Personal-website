@@ -31,19 +31,19 @@
 - Vercel ：https://personal-website-ten-alpha-51.vercel.app/
 
 ## 项目结构
-``bash
-bareerah-bbs/
-├── public/               # 静态资源
-├── src/
-│   ├── App.jsx           # 主组件（全部逻辑在此）
-│   ├── index.css         # Tailwind + 复古样式
-│   └── main.jsx
-├── .env.example          # 环境变量模板
-├── vite.config.js
-├── tailwind.config.js
-├── postcss.config.js
-└── README.md
-``
+
+   bareerah-bbs/
+   ├── public/               # 静态资源
+   ├── src/
+   │   ├── App.jsx           # 主组件（全部逻辑在此）
+   │   ├── index.css         # Tailwind + 复古样式
+   │   └── main.jsx
+   ├── .env.example          # 环境变量模板
+   ├── vite.config.js
+   ├── tailwind.config.js
+   ├── postcss.config.js   
+   └── README.md
+
 
 ## 快速开始（本地开发）
 
