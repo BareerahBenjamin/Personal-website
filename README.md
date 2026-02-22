@@ -31,7 +31,7 @@
 - Vercel ：https://personal-website-ten-alpha-51.vercel.app/
 
 ## 项目结构
-··bash
+``bash
 bareerah-bbs/
 ├── public/               # 静态资源
 ├── src/
