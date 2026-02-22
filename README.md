@@ -31,7 +31,7 @@
 - Vercel ：https://personal-website-ten-alpha-51.vercel.app/
 
 ## 项目结构
-
+   ```bash
    bareerah-bbs/   
    ├── public/               # 静态资源   
    ├── src/   
@@ -43,7 +43,7 @@
    ├── tailwind.config.js   
    ├── postcss.config.js      
    └── README.md   
-
+   ```
 
 ## 快速开始（本地开发）
 
@@ -51,3 +51,37 @@
    ```bash
    git clone https://github.com/BareerahBenjamin/bareerah-bbs.git
    cd bareerah-bbs
+   ```
+
+2. 安装依赖
+   ```Bash
+   npm install
+   ```
+3. 创建 .env 文件（复制 .env.example 并修改）
+   ```text
+   VITE_SUPABASE_URL=你的 Supabase 项目 URL
+   VITE_SUPABASE_ANON_KEY=你的 anon public key
+   VITE_ADMIN_PASSWORD=你的管理员密码（用于脚本文档中的 prompt 验证）
+   ```
+4. 启动开发服务器
+   ```Bash
+   npm run dev
+   ```
+   访问 http://localhost:5173
+5. 构建生产版本
+   ```Bash
+   npm run build
+   ```
+
+## Supabase 表结构（参考）
+
+- logs：文章表（id, title, content, date, tags[], views, created_at, updated_at）
+- messages：全局留言板
+- post_comments：每篇日志的评论（log_id, name, email, content, created_at）
+- 函数：increment_views（用于浏览量 +1）
+
+## 管理员功能
+
+- 输入密码进入编辑模式（当前通过 footer 的小点 + prompt 触发）
+- 支持新建、编辑、删除日志
+- 建议：上线前改为更安全的认证方式（Supabase Auth 或 JWT）
