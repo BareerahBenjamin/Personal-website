@@ -1,16 +1,40 @@
-# React + Vite
+# Bareerah 的小屋
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个带有早期论坛复古风格的个人网站 / 博客系统  
+使用 React + Vite + Tailwind CSS + Supabase 实现
 
-Currently, two official plugins are available:
+![网站截图](https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/index.png)  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 项目特色
 
-## React Compiler
+- 经典 2000 年代 BBS 风格界面（Courier New 字体、灰蓝配色、立体边框）
+- 支持 Markdown 渲染的博客文章（日志）
+- 实时留言板 + 帖子独立评论区
+- 真实浏览量统计（Supabase RPC 实现）
+- 在线人数显示（Supabase Presence）
+- 按标签动态筛选文章
+- 管理员后台（新建 / 编辑 / 删除日志）
+- 响应式布局，支持手机浏览
+- 部署友好（Vercel / Netlify / Cloudflare Pages）
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 技术栈
 
-## Expanding the ESLint configuration
+- 前端框架：React 18 + Vite
+- 样式：Tailwind CSS + 自定义复古样式
+- Markdown 渲染：react-markdown + remark-gfm + rehype-raw + remark-breaks
+- 后端 & 数据库：Supabase（PostgreSQL + Realtime + Presence + Storage）
+- 部署平台：Vercel / Netlify / Cloudflare Pages
+- 其他：localStorage 记住用户信息、useMemo 优化标签筛选
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 线上地址
+
+- 主域名：https://bareerahweb.com （或你实际部署的域名）
+- 默认 Pages 预览：https://bareerah-bbs.[你的用户名].pages.dev （Cloudflare Pages）
+- Vercel 预览（可选）：https://bareerah-bbs-[随机id].vercel.app
+
+## 快速开始（本地开发）
+
+1. 克隆仓库
+   ```bash
+   git clone https://github.com/BareerahBenjamin/bareerah-bbs.git
+   cd bareerah-bbs
