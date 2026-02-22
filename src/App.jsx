@@ -776,7 +776,7 @@ function App() {
         <span 
           onClick={() => {
             const pass = prompt('请输入管理员密码：');
-            if (pass === 'QAZWSXplmokn135.') {
+            if (pass === import.meta.env.VITE_ADMIN_PASSWORD) {
               setIsAdmin(true);
               localStorage.setItem('bbs_admin', 'true');
             }
