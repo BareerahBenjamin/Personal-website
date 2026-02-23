@@ -2,14 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* --- 全局复古底色 --- */
+/* --- 基础布局 --- */
 body {
   font-family: 'Courier New', monospace;
   background: #c0c0c0;
-  color: #000;
 }
 
-/* --- BBS 框架 UI --- */
 .forum-header {
   background: #000080;
   color: white;
@@ -41,7 +39,7 @@ body {
   color: #ff0000;
 }
 
-/* --- Markdown 内容样式 (Typography) --- */
+/* --- Markdown 基础样式 --- */
 .prose h1 { @apply text-3xl font-bold mt-6 mb-4; }
 .prose h2 { @apply text-2xl font-bold mt-5 mb-3; }
 .prose h3 { @apply text-xl font-bold mt-4 mb-2; }
@@ -51,67 +49,32 @@ body {
 .prose li { @apply mb-1; }
 .prose blockquote { @apply border-l-4 border-gray-300 pl-4 italic my-4; }
 
-/* --- 复古代码样式定制 --- */
+/* --- 极简代码块样式 --- */
 
-/* 1. 行内代码：看起来像凹陷的小零件 */
-.prose :not(pre) > code {
-  @apply px-1.5 py-0.5 mx-0.5 text-[#000080] font-bold bg-[#d4d0c8];
-  border-left: 1px solid #808080;
-  border-top: 1px solid #808080;
-  border-right: 1px solid #fff;
-  border-bottom: 1px solid #fff;
-  font-size: 0.9em;
-}
-
-/* 2. 代码块外层容器 (用于定位语言标签) */
-.code-block-wrapper {
-  @apply relative my-8;
-}
-
-/* 3. 动态语言标签：Win95 凸起按钮风格 */
-.code-lang-tag {
-  position: absolute;
-  top: -12px;
-  right: 10px;
-  z-index: 10;
-  padding: 2px 8px;
-  background: #c0c0c0;
-  color: #000;
+/* 1. 行内代码：保持简洁，仅加一点灰色底 */
+.prose :not(pre) > code { 
+  @apply bg-gray-200 px-1 py-0.5 rounded text-gray-800; 
   font-family: 'Courier New', monospace;
-  font-size: 10px;
-  font-weight: bold;
-  border: 1px solid #000;
-  border-left: 1px solid #fff;
-  border-top: 1px solid #fff;
-  border-right: 1px solid #808080;
-  border-bottom: 1px solid #808080;
-  box-shadow: 1px 1px 0 #000;
 }
 
-/* 4. 代码预格式化框：黑底深色凹陷 */
-.prose pre {
-  @apply p-5 bg-black overflow-x-auto !important;
-  border: 2px solid #808080;
-  box-shadow: inset 2px 2px 0 #000, 1px 1px 0 #fff;
-  margin-top: 0;
-  border-radius: 0; /* 移除圆角以符合复古感 */
+/* 2. 代码块 (Pre)：只保留深色底和横向滚动 */
+.prose pre { 
+  @apply bg-[#1e1e1e] text-gray-200 p-4 overflow-x-auto my-6; 
+  border-radius: 4px; /* 稍微给一点圆角，看起来没那么生硬 */
 }
 
-/* 5. 内部代码文字：终端绿色荧光 */
+/* 3. 代码文字：恢复正常颜色，不再使用荧光绿 */
 .prose pre code {
-  @apply bg-transparent p-0 text-[#00ff00] !important;
+  @apply bg-transparent p-0 text-gray-200;
   font-family: 'Courier New', monospace !important;
-  /*text-shadow: 0 0 2px rgba(0, 255, 0, 0.5);*/
-  line-height: 1.6;
+  color: inherit !important;
 }
 
-/* 6. 复古滚动条美化 */
-.prose pre::-webkit-scrollbar {
-  height: 12px;
-  background: #c0c0c0;
+/* 4. 语言标签容器 (如果你在 App.jsx 里保留了 wrapper，这里让它保持简洁) */
+.code-block-wrapper {
+  @apply relative;
 }
-.prose pre::-webkit-scrollbar-thumb {
-  background: #c0c0c0;
-  border: 2px solid;
-  border-color: #fff #808080 #808080 #fff;
+
+.code-lang-tag {
+  @apply absolute top-0 right-0 px-2 py-1 text-[10px] text-gray-500 font-mono uppercase;
 }
