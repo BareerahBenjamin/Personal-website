@@ -28,7 +28,7 @@
 
 ## 线上地址
 
-- Vercel ：https://personal-website-ten-alpha-51.vercel.app/
+- bareerahsite.dpdns.org
 
 ## 项目结构
    ```bash
