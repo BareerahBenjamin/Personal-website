@@ -2,6 +2,7 @@
 
 一个带有早期论坛复古风格的个人网站 / 博客系统  
 使用 React + Vite + Tailwind CSS + Supabase 实现
+**线上地址**： bareerahsite.dpdns.org
 
 ![网站截图](https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/index.png)  
 
@@ -25,10 +26,6 @@
 - 后端 & 数据库：Supabase（PostgreSQL + Realtime + Presence + Storage）
 - 部署平台：Vercel / Netlify / Cloudflare Pages
 - 其他：localStorage 记住用户信息、useMemo 优化标签筛选
-
-## 线上地址
-
-- bareerahsite.dpdns.org
 
 ## 项目结构
    ```bash
