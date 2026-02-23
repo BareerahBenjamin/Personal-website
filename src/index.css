@@ -47,5 +47,51 @@ body {
 .prose ol { @apply list-decimal pl-6 mb-4 !important; }
 .prose li { @apply mb-1; }
 .prose blockquote { @apply border-l-4 border-gray-300 pl-4 italic my-4; }
-.prose code { @apply bg-gray-100 px-1 py-0.5 rounded text-red-500; }
+/* 1. 行内代码 (Inline Code)：看起来像一个凹陷的小按钮 */
+.prose :not(pre) > code {
+  @apply px-1.5 py-0.5 mx-0.5 text-[#000080] font-bold bg-[#d4d0c8];
+  border-left: 1px solid #808080;
+  border-top: 1px solid #808080;
+  border-right: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+/* 2. 代码块外层 (Pre)：模拟黑底绿字的极客终端 */
+.prose pre {
+  @apply my-6 p-4 overflow-x-auto bg-black;
+  /* Win95 风格的深色凹陷边框 */
+  border: 2px solid #808080;
+  box-shadow: inset 2px 2px 0 #000, 1px 1px 0 #fff;
+  position: relative;
+}
+
+/* 给代码块加一个“Terminal”小标签 (可选) */
+.prose pre::before {
+  content: "CODE - TERMINAL";
+  display: block;
+  @apply text-[10px] text-black bg-[#c0c0c0] px-2 mb-3 w-fit font-bold;
+  border: 1px solid #000;
+}
+
+/* 3. 代码块内部文字：经典荧光绿 */
+.prose pre code {
+  @apply bg-transparent p-0 text-[#00ff00] leading-relaxed;
+  font-family: 'Courier New', monospace !important;
+  text-shadow: 0 0 2px rgba(0, 255, 0, 0.7); /* 淡淡的荧光效果 */
+  color: #00ff00 !important; /* 强制覆盖之前的红色 */
+}
+
+/* 4. 滚动条美化：让它看起来也像 Win95 */
+.prose pre::-webkit-scrollbar {
+  height: 12px;
+  background: #c0c0c0;
+}
+.prose pre::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+}
+
 .prose pre { @apply bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4; }
