@@ -47,43 +47,44 @@ body {
 .prose ol { @apply list-decimal pl-6 mb-4 !important; }
 .prose li { @apply mb-1; }
 .prose blockquote { @apply border-l-4 border-gray-300 pl-4 italic my-4; }
-/* 1. 行内代码 (Inline Code)：看起来像一个凹陷的小按钮 */
-.prose :not(pre) > code {
-  @apply px-1.5 py-0.5 mx-0.5 text-[#000080] font-bold bg-[#d4d0c8];
-  border-left: 1px solid #808080;
-  border-top: 1px solid #808080;
-  border-right: 1px solid #fff;
-  border-bottom: 1px solid #fff;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9em;
+/* 代码块容器 */
+.code-block-wrapper {
+  @apply relative my-8;
 }
 
-/* 2. 代码块外层 (Pre)：模拟黑底绿字的极客终端 */
+/* 动态语言标签：复古小标签风格 */
+.code-lang-tag {
+  position: absolute;
+  top: -12px;
+  right: 10px;
+  z-index: 10;
+  padding: 2px 8px;
+  background: #c0c0c0; /* Win95 标准灰 */
+  color: #000;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid #000;
+  /* 制作凸起效果 */
+  border-left: 1px solid #fff;
+  border-top: 1px solid #fff;
+  border-right: 1px solid #808080;
+  border-bottom: 1px solid #808080;
+  box-shadow: 1px 1px 0 #000;
+}
+
+/* 修改 pre 样式，为标签留出空间 */
 .prose pre {
-  @apply my-6 p-4 overflow-x-auto bg-black;
-  /* Win95 风格的深色凹陷边框 */
+  @apply p-5 bg-black !important;
   border: 2px solid #808080;
   box-shadow: inset 2px 2px 0 #000, 1px 1px 0 #fff;
-  position: relative;
+  margin-top: 0;
 }
 
-/* 3. 代码块内部文字：经典荧光绿 */
+/* 内部代码文字 */
 .prose pre code {
-  @apply bg-transparent p-0 text-[#00ff00] leading-relaxed;
-  font-family: 'Courier New', monospace !important;
-  text-shadow: 0 0 2px rgba(0, 255, 0, 0.7); /* 淡淡的荧光效果 */
-  color: #fff !important; /* 强制覆盖之前的红色 */
-}
-
-/* 4. 滚动条美化：让它看起来也像 Win95 */
-.prose pre::-webkit-scrollbar {
-  height: 12px;
-  background: #c0c0c0;
-}
-.prose pre::-webkit-scrollbar-thumb {
-  background: #c0c0c0;
-  border: 2px solid;
-  border-color: #fff #808080 #808080 #fff;
+  @apply text-[#00ff00] !important;
+  text-shadow: 0 0 2px rgba(0, 255, 0, 0.5);
 }
 
 .prose pre { @apply bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4; }

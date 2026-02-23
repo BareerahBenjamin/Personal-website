@@ -468,7 +468,34 @@ function App() {
                                   prose-ul:list-disc prose-ul:pl-5
                                   prose-ol:list-decimal prose-ol:pl-5
                                   prose-blockquote:border-l-4 prose-blockquote:border-gray-300">
-                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeRaw]}>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm, remarkBreaks]} 
+                      rehypePlugins={[rehypeRaw]}
+                      components={{
+                        code({ node, inline, className, children, ...props }) {
+                          // 提取语言名称，例如从 "language-javascript" 中提取 "javascript"
+                          const match = /language-(\w+)/.exec(className || '');
+                          const langName = match ? match[1] : '';
+
+                          return !inline ? (
+                            <div className="code-block-wrapper">
+                              {langName && (
+                                <div className="code-lang-tag">
+                                  {langName.toUpperCase()}
+                                </div>
+                              )}
+                              <pre className={className}>
+                                <code {...props}>{children}</code>
+                              </pre>
+                            </div>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        }
+                      }}
+                    >
                       {String(selectedPost?.content || '')} 
                     </ReactMarkdown>
                   </div>
