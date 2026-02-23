@@ -9,6 +9,6 @@ export default {
     },
   },
   plugins: [
-    equire('@tailwindcss/typography'),
+    require('@tailwindcss/typography'),
   ],
 }
