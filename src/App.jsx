@@ -462,7 +462,12 @@ function App() {
                   <div className="text-xs text-gray-600 mt-2 mb-8">发布日期：{selectedPost.date}</div>
                   
                   {/* 帖子正文展示 */}
-                  <div className="prose prose-slate max-w-none text-base leading-relaxed my-8">
+                  <div className="prose prose-slate lg:prose-lg max-w-none my-8 
+                                  prose-headings:font-bold prose-headings:text-black
+                                  prose-p:text-gray-800
+                                  prose-ul:list-disc prose-ul:pl-5
+                                  prose-ol:list-decimal prose-ol:pl-5
+                                  prose-blockquote:border-l-4 prose-blockquote:border-gray-300">
                     <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeRaw]}>
                       {String(selectedPost?.content || '')} 
                     </ReactMarkdown>
