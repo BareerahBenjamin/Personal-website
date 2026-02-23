@@ -40,41 +40,54 @@ body {
 }
 
 /* --- Markdown 基础样式 --- */
-.prose h1 { @apply text-3xl font-bold mt-6 mb-4; }
-.prose h2 { @apply text-2xl font-bold mt-5 mb-3; }
-.prose h3 { @apply text-xl font-bold mt-4 mb-2; }
-.prose p { @apply mb-4 leading-relaxed; }
-.prose ul { @apply list-disc pl-6 mb-4 !important; }
-.prose ol { @apply list-decimal pl-6 mb-4 !important; }
+.prose h1 { @apply text-2xl font-bold mt-4 mb-2; }
+.prose h2 { @apply text-xl font-bold mt-4 mb-2; }
+.prose h3 { @apply text-lg font-bold mt-3 mb-1; }
+.prose p { @apply mb-3 leading-relaxed; }
+.prose ul { @apply list-disc pl-5 mb-3 !important; }
+.prose ol { @apply list-decimal pl-5 mb-3 !important; }
 .prose li { @apply mb-1; }
-.prose blockquote { @apply border-l-4 border-gray-300 pl-4 italic my-4; }
+.prose blockquote { @apply border-l-4 border-gray-300 pl-4 italic my-3; }
 
-/* --- 极简代码块样式 --- */
+/* --- 紧凑型代码块样式 --- */
 
-/* 1. 行内代码：保持简洁，仅加一点灰色底 */
+/* 1. 行内代码 */
 .prose :not(pre) > code { 
   @apply bg-gray-200 px-1 py-0.5 rounded text-gray-800; 
   font-family: 'Courier New', monospace;
+  font-size: 0.9em;
 }
 
-/* 2. 代码块 (Pre)：只保留深色底和横向滚动 */
-.prose pre { 
-  @apply bg-[#1e1e1e] text-gray-200 p-4 overflow-x-auto my-6; 
-  border-radius: 4px; /* 稍微给一点圆角，看起来没那么生硬 */
-}
-
-/* 3. 代码文字：恢复正常颜色，不再使用荧光绿 */
-.prose pre code {
-  @apply bg-transparent p-0 text-gray-200;
-  font-family: 'Courier New', monospace !important;
-  color: inherit !important;
-}
-
-/* 4. 语言标签容器 (如果你在 App.jsx 里保留了 wrapper，这里让它保持简洁) */
+/* 2. 代码块容器：收紧上下间距 */
 .code-block-wrapper {
-  @apply relative;
+  @apply relative my-4; 
 }
 
+/* 3. 语言标签：缩小尺寸并贴合边缘 */
 .code-lang-tag {
-  @apply absolute top-0 right-0 px-2 py-1 text-[10px] text-gray-500 font-mono uppercase;
+  @apply absolute top-0 right-0 px-2 py-0.5 text-[9px] text-gray-500 font-mono uppercase opacity-70;
+}
+
+/* 4. 代码预格式化框：减小内边距，去掉多余空间 */
+.prose pre { 
+  @apply bg-[#1e1e1e] text-gray-100 p-3 overflow-x-auto !important; 
+  border-radius: 2px;
+  margin: 0 !important; /* 由 wrapper 统一控制间距 */
+}
+
+/* 5. 内部代码文字 */
+.prose pre code {
+  @apply bg-transparent p-0 text-gray-100;
+  font-family: 'Courier New', monospace !important;
+  font-size: 13px; /* 稍微缩小字号 */
+  line-height: 1.5;
+}
+
+/* 6. 简单的滚动条 */
+.prose pre::-webkit-scrollbar {
+  height: 6px;
+}
+.prose pre::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
 }
