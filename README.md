@@ -1,8 +1,8 @@
 # Bareerah 的小屋
 
 一个带有早期论坛复古风格的个人网站 / 博客系统  
-使用 React + Vite + Tailwind CSS + Supabase 实现
-**线上地址**： bareerahsite.dpdns.org
+使用 React + Vite + Tailwind CSS + Supabase 实现   
+**线上地址**：https://bareerahsite.dpdns.org/
 
 ![网站截图](https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/index.png)  
 
