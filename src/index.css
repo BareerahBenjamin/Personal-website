@@ -67,20 +67,12 @@ body {
   position: relative;
 }
 
-/* 给代码块加一个“Terminal”小标签 (可选) */
-.prose pre::before {
-  content: "CODE - TERMINAL";
-  display: block;
-  @apply text-[10px] text-black bg-[#c0c0c0] px-2 mb-3 w-fit font-bold;
-  border: 1px solid #000;
-}
-
 /* 3. 代码块内部文字：经典荧光绿 */
 .prose pre code {
   @apply bg-transparent p-0 text-[#00ff00] leading-relaxed;
   font-family: 'Courier New', monospace !important;
   text-shadow: 0 0 2px rgba(0, 255, 0, 0.7); /* 淡淡的荧光效果 */
-  color: #00ff00 !important; /* 强制覆盖之前的红色 */
+  color: #fff !important; /* 强制覆盖之前的红色 */
 }
 
 /* 4. 滚动条美化：让它看起来也像 Win95 */
