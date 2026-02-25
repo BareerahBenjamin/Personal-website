@@ -89,3 +89,21 @@ body {
   background: #444;
   border-radius: 3px;
 }
+
+.prose {
+  /* 确保长网址和长单词能自动换行 */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all; /* 强制拆分超长字符串 */
+}
+
+/* 专门针对链接进行优化 */
+.prose a {
+  word-break: break-all;
+  white-space: normal;
+}
+
+.prose img {
+  @apply max-w-full h-auto mx-auto my-4 border-2 border-black shadow-[2px_2px_0_#000];
+  display: block;
+}

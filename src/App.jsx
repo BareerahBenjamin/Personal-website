@@ -472,6 +472,13 @@ function App() {
                       remarkPlugins={[remarkGfm, remarkBreaks]} 
                       rehypePlugins={[rehypeRaw]}
                       components={{
+                        img: ({node, ...props}) => (
+                          <img 
+                            style={{maxWidth: '100%', height: 'auto'}} 
+                            className="my-4 border-2 border-black" 
+                            {...props} 
+                          />
+                        ),
                         code({ node, inline, className, children, ...props }) {
                           // 提取语言名称，例如从 "language-javascript" 中提取 "javascript"
                           const match = /language-(\w+)/.exec(className || '');
