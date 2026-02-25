@@ -58,7 +58,11 @@ body {
 
 /* 2. 代码块容器：收紧上下间距 */
 .code-block-wrapper {
-  @apply relative my-4; 
+  @apply relative my-6; 
+}
+
+.code-block-wrapper + .code-block-wrapper {
+  margin-top: 2rem; 
 }
 
 /* 3. 语言标签：缩小尺寸并贴合边缘 */
@@ -71,6 +75,8 @@ body {
   @apply bg-[#1e1e1e] text-gray-100 p-3 overflow-x-auto !important; 
   border-radius: 2px;
   margin: 0 !important; /* 由 wrapper 统一控制间距 */
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* 内部阴影 */
+  border-bottom: 2px solid #000; /* 底部加深，符合BBS风格 */
 }
 
 /* 5. 内部代码文字 */
