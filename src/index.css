@@ -58,7 +58,7 @@ body {
 
 /* 2. 代码块容器：收紧上下间距 */
 .code-block-wrapper {
-  @apply relative my-6; 
+  @apply relative my-2; 
 }
 
 .code-block-wrapper + .code-block-wrapper {
