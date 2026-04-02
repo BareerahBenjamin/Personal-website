@@ -78,7 +78,7 @@ function App() {
   const playNext = () => setCurrentIndex(i => (i + 1) % PLAYLIST.length)
   const playPrev = () => setCurrentIndex(i => (i - 1 + PLAYLIST.length) % PLAYLIST.length)
 
-  const tabs = ['首页', '个人简介', '我的日志', '留言板']
+  const tabs = ['首页', '我的日志', '留言板', '个人简介']
 
   const allTags = useMemo(() => {
     const tags = posts.flatMap(p => Array.isArray(p.tags) ? p.tags : [])
@@ -536,7 +536,8 @@ function App() {
                     <strong>联系方式：</strong><br />
                     <a href="https://x.com/EASTERN_Z_CHILD" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">X</a>
                     {' | '}
-                    <a href="https://github.com/BareerahBenjamin" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">GitHub</a><br />
+                    <a href="https://github.com/BareerahBenjamin" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">GitHub</a>
+                    {' | '}
                     <a href="bareerahmoooo@gmail.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">Email</a><br /> 
                   </div>
                 </div>
@@ -956,19 +957,11 @@ function App() {
             else if (pass !== null) { alert('密码错误') }
           }} className="cursor-default hover:text-black transition-colors ml-1">.</span>
           {isAdmin && (
-            <button onClick={() => { setIsAdmin(false); localStorage.removeItem('bbs_admin') }} className="ml-4 text-red-500 hover:underline cursor-pointer">[退出管理员]</button>
+            <button onClick={() => { setIsAdmin(false); localStorage.removeItem('bbs_admin') }} className="ml-4 text-red-500 hover:underline cursor-pointer">{'[退出管理员]'}</button>
           )}
         </div>
       </footer>
       {/* ── 浮动音乐播放器 ─────────────────────────────── */}
-      {/*
-        ★ 配置说明：
-        【网易云】将下方 NETEASE_SONG_ID 替换为歌曲/歌单 ID
-          - 歌曲：打开网易云网页版，地址栏 ?id=XXXXXXX 即为 ID，type=2
-          - 歌单：歌单页地址栏 ?id=XXXXXXX，type=0
-        【Spotify】将 SPOTIFY_PLAYLIST_ID 替换为歌单/单曲 ID
-          - 右键歌单 → 分享 → 复制链接，链接末尾的字符串即为 ID
-      */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
 
         {/* 展开后的播放器面板 */}
@@ -978,7 +971,7 @@ function App() {
             <div className="bg-[#000080] text-white px-3 py-1.5 flex items-center justify-between text-xs">
               <span className="text-[10px]">♪ 正在播放 {currentIndex + 1} / {PLAYLIST.length}</span>
               <button
-                onClick={() => { setPlayerOpen(false); audioRef.current?.pause(); setIsPlaying(false) }}
+                onClick={() => setPlayerOpen(false)}
                 className="hover:text-yellow-300 text-base leading-none"
               >×</button>
             </div>
@@ -1018,17 +1011,18 @@ function App() {
               ))}
             </div>
 
-            {/* 隐藏 audio */}
-            <audio
-              ref={audioRef}
-              src={currentSong.src}
-              loop={PLAYLIST.length === 1}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={playNext}
-            />
           </div>
         )}
+
+        {/* audio 放在面板外，关闭面板时不会被卸载，音乐继续播放 */}
+        <audio
+          ref={audioRef}
+          src={currentSong.src}
+          loop={PLAYLIST.length === 1}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={playNext}
+        />
 
         {/* 收起状态的悬浮按钮 */}
         <button
