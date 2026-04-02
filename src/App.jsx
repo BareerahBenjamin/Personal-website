@@ -260,7 +260,7 @@ function App() {
 
     setSendingReply(true)
     try {
-      // 1. 将回复内容保存到数据库（需要 message 表有 reply 列，详见配套 SQL）
+      // 1. 将回复内容保存到数据库（需要 messages 表有 reply 列，详见配套 SQL）
       const { error: updateError } = await supabase
         .from('message')
         .update({ reply: replyText.trim() })
