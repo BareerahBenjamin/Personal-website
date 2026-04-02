@@ -123,7 +123,7 @@ function App() {
       const { data, error } = await supabase
         .from('message')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('time', { ascending: false })
       if (error) console.error(error)
       else setComments(data || [])
       setLoading(false)
@@ -190,7 +190,6 @@ function App() {
       .insert([{
         name: name.trim(),
         email: email.trim(),
-        website: website.trim() || null,
         content: newComment.trim()
       }])
       .select()
@@ -208,7 +207,7 @@ function App() {
       }
       if (remember) {
         localStorage.setItem('bbs_user', JSON.stringify({
-          name: name.trim(), email: email.trim(), website: website.trim(), remember: true
+          name: name.trim(), email: email.trim(), remember: true
         }))
       } else {
         localStorage.removeItem('bbs_user')
@@ -602,7 +601,7 @@ function App() {
                           <div key={c.id} className="bg-[#f5f5f5] border border-black shadow-[2px_2px_0_#000]">
                             <div className="bg-[#000080] text-white px-3 py-1.5 flex justify-between text-[10px]">
                               <span className="font-bold">#{index + 1} 访客: {c.name}</span>
-                              <span className="opacity-75">{new Date(c.created_at).toLocaleString('zh-CN')}</span>
+                              <span className="opacity-75">{new Date(c.time).toLocaleString('zh-CN')}</span>
                             </div>
                             <div className="p-4 text-sm prose-sm">
                               <ReactMarkdown>{String(c.content || '')}</ReactMarkdown>
@@ -831,7 +830,7 @@ function App() {
                           )}
                         </div>
                         <span className="opacity-70 text-[10px] whitespace-nowrap ml-2">
-                          {new Date(c.created_at).toLocaleString('zh-CN')}
+                          {new Date(c.time).toLocaleString('zh-CN')}
                         </span>
                       </div>
 
