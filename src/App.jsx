@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import remarkBreaks from 'remark-breaks'
+import { useState, useEffect, useMemo, useRef } from 'react'
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -11,6 +11,19 @@ const supabase = createClient(
 )
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
+
+const PLAYLIST = [
+  { title: 'come close (feat. Ayra Starr)', artist: 'CKay,Ayra Starr', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/CKay,Ayra%20Starr%20-%20come%20close%20(feat.%20Ayra%20Starr).mp3' },
+  { title: 'Horses to Water', artist: 'Joji', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/Joji%20-%20Horses%20to%20Water.mp3' },
+  { title: '电动少女 (Live版)', artist: 'Chinese Football', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/Chinese%20Football.mp3' },
+  { title: 'Hype Boy', artist: 'Newjeans X 山下達郎', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/Hype%20Boy.mp3' },
+  { title: '落日', artist: '東京事変', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/Fallen%20sun.mp3' },
+  { title: '白日梦', artist: '红白色乐队', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/redwhite%20-%20orange.mp3' },
+  { title: '橙子', artist: '红白色乐队', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/redwhite%20-%20dream.mp3' },
+  { title: '住进你的行李 (A Plus Ver.) - (Sami (A Plus Ver.))', artist: '甜約翰 Sweet John', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/Sweet%20John%20-%20luggage%20(A%20Plus%20Ver.)%20-%20(Sami%20(A%20Plus%20Ver.)).mp3' },
+  { title: '冬眠', artist: '郑宜农 X 安溥', src: 'https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/music/winter.mp3' },
+  
+]
 
 function App() {
   const [activeTab, setActiveTab] = useState('首页')
@@ -50,9 +63,20 @@ function App() {
   const [postReplyText, setPostReplyText] = useState('')
 
   // 音乐播放器
+  const audioRef = useRef(null)
   const [playerOpen, setPlayerOpen] = useState(true)
-  // const [playerSource, setPlayerSource] = useState('netease') // 'netease' | 'spotify'
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(0)
 
+  const currentSong = PLAYLIST[currentIndex]
+
+  const togglePlay = () => {
+    if (!audioRef.current) return
+    isPlaying ? audioRef.current.pause() : audioRef.current.play()
+  }
+
+  const playNext = () => setCurrentIndex(i => (i + 1) % PLAYLIST.length)
+  const playPrev = () => setCurrentIndex(i => (i - 1 + PLAYLIST.length) % PLAYLIST.length)
 
   const tabs = ['首页', '个人简介', '我的日志', '留言板']
 
@@ -91,6 +115,13 @@ function App() {
     setActiveTab(tab); setSelectedPost(null); setEditingPost(null)
     setNewPostMode(false); setFilterTag('全部'); setVisitorReplyTo(null); setPostReplyTo(null)
   }
+
+  // 切歌时自动播放
+  useEffect(() => {
+    if (!audioRef.current) return
+    audioRef.current.load()
+    if (isPlaying) audioRef.current.play()
+  }, [currentIndex])
 
   useEffect(() => {
     const channel = supabase.channel('online-users', {
@@ -942,22 +973,59 @@ function App() {
 
         {/* 展开后的播放器面板 */}
         {playerOpen && (
-          <div className="border-4 border-black shadow-[4px_4px_0_#000] overflow-hidden w-[330px]">
-            {/* 面板标题栏 */}
+          <div className="border-4 border-black shadow-[4px_4px_0_#000] overflow-hidden w-[300px]">
+            {/* 标题栏 */}
             <div className="bg-[#000080] text-white px-3 py-1.5 flex items-center justify-between text-xs">
-              <span className="text-[10px]">♪ 正在播放</span>
-              <button onClick={() => setPlayerOpen(false)} className="hover:text-yellow-300 text-base leading-none">×</button>
+              <span className="text-[10px]">♪ 正在播放 {currentIndex + 1} / {PLAYLIST.length}</span>
+              <button
+                onClick={() => { setPlayerOpen(false); audioRef.current?.pause(); setIsPlaying(false) }}
+                className="hover:text-yellow-300 text-base leading-none"
+              >×</button>
             </div>
 
-            {/* 网易云播放器，auto=1 自动播放 */}
-            <iframe
-              title="网易云音乐"
-              frameBorder="no"
-              marginWidth="0"
-              marginHeight="0"
-              width="330"
-              height="110"
-              src="//music.163.com/outchain/player?type=0&id=17870929430&auto=1&height=90"
+            {/* 当前歌曲信息 */}
+            <div className="bg-[#f0f0f0] px-3 pt-3 pb-1">
+              <div className="text-xs font-bold text-[#000080] truncate">🎵 {currentSong.title}</div>
+              <div className="text-[10px] text-gray-500 truncate">{currentSong.artist}</div>
+            </div>
+
+            {/* 控制按钮 */}
+            <div className="bg-[#f0f0f0] px-3 pb-3 flex items-center justify-center gap-3 mt-1">
+              <button onClick={playPrev}
+                className="w-8 h-8 bg-[#c0c0c0] border-2 border-black shadow-[2px_2px_0_#000] flex items-center justify-center text-sm active:translate-x-px active:translate-y-px active:shadow-none">
+                ⏮
+              </button>
+              <button onClick={togglePlay}
+                className="w-10 h-10 bg-[#000080] text-white border-2 border-black shadow-[2px_2px_0_#000] flex items-center justify-center text-base active:translate-x-px active:translate-y-px active:shadow-none">
+                {isPlaying ? '⏸' : '▶'}
+              </button>
+              <button onClick={playNext}
+                className="w-8 h-8 bg-[#c0c0c0] border-2 border-black shadow-[2px_2px_0_#000] flex items-center justify-center text-sm active:translate-x-px active:translate-y-px active:shadow-none">
+                ⏭
+              </button>
+            </div>
+
+            {/* 歌单列表 */}
+            <div className="border-t-2 border-black max-h-[150px] overflow-y-auto">
+              {PLAYLIST.map((song, i) => (
+                <div key={i} onClick={() => { setCurrentIndex(i); setIsPlaying(true) }}
+                  className={`px-3 py-2 text-xs cursor-pointer flex items-center gap-2 border-b border-gray-300 hover:bg-[#e0e0ff] transition-colors
+                    ${i === currentIndex ? 'bg-[#000080] text-white' : 'bg-white text-black'}`}>
+                  <span>{i === currentIndex && isPlaying ? '♪' : `${i + 1}.`}</span>
+                  <span className="truncate">{song.title}</span>
+                  <span className={`ml-auto text-[9px] shrink-0 ${i === currentIndex ? 'text-white/70' : 'text-gray-400'}`}>{song.artist}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 隐藏 audio */}
+            <audio
+              ref={audioRef}
+              src={currentSong.src}
+              loop={PLAYLIST.length === 1}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={playNext}
             />
           </div>
         )}
