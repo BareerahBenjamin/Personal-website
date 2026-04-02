@@ -41,9 +41,13 @@ function App() {
   const [replyText, setReplyText] = useState('')
   const [sendingReply, setSendingReply] = useState(false)
 
-  // 访客互相回复状态
+  // 留言板：访客互相回复状态
   const [visitorReplyTo, setVisitorReplyTo] = useState(null)
   const [visitorReplyText, setVisitorReplyText] = useState('')
+
+  // 讨论区：访客互相回复状态
+  const [postReplyTo, setPostReplyTo] = useState(null)
+  const [postReplyText, setPostReplyText] = useState('')
 
   const tabs = ['首页', '个人简介', '我的日志', '留言板']
 
@@ -67,9 +71,20 @@ function App() {
     }))
   }, [comments])
 
+  // 讨论区也做树形整理
+  const postCommentTree = useMemo(() => {
+    const top = postComments.filter(c => !c.parent_id)
+    return top.map(c => ({
+      ...c,
+      replies: postComments
+        .filter(r => r.parent_id === c.id)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    }))
+  }, [postComments])
+
   const handleTabChange = (tab) => {
     setActiveTab(tab); setSelectedPost(null); setEditingPost(null)
-    setNewPostMode(false); setFilterTag('全部'); setVisitorReplyTo(null)
+    setNewPostMode(false); setFilterTag('全部'); setVisitorReplyTo(null); setPostReplyTo(null)
   }
 
   useEffect(() => {
@@ -172,6 +187,41 @@ function App() {
       setPostComments(prev => [...prev, data[0]]); setNewPostComment('')
       if (remember) localStorage.setItem('bbs_user', JSON.stringify({ name, email, remember: true }))
     } else { alert('发布失败，请检查数据库设置') }
+  }
+
+  // 讨论区：访客回复某条评论（parent_id）
+  const handlePostVisitorReply = async () => {
+    if (!name.trim() || !email.trim() || !postReplyText.trim()) { alert('昵称、邮箱和回复内容不能为空'); return }
+    if (!EMAIL_REGEX.test(email.trim())) { alert('请输入有效的邮箱格式'); return }
+    const { data, error } = await supabase.from('post_comments')
+      .insert([{ log_id: selectedPost.id, name: name.trim(), email: email.trim(), content: postReplyText.trim(), parent_id: postReplyTo.id }]).select()
+    if (error) { alert(`回复失败：${error.message}`) }
+    else {
+      if (data?.[0]) setPostComments(prev => [...prev, data[0]])
+      if (remember) localStorage.setItem('bbs_user', JSON.stringify({ name: name.trim(), email: email.trim(), remember: true }))
+      setPostReplyTo(null); setPostReplyText('')
+    }
+  }
+
+  // 讨论区：管理员删除顶级评论（连同子回复）
+  const handleDeletePostComment = async (comment) => {
+    const childIds = postComments.filter(c => c.parent_id === comment.id).map(c => c.id)
+    const msg = childIds.length > 0
+      ? `确认删除「${comment.name}」的评论及其 ${childIds.length} 条回复？`
+      : `确认删除「${comment.name}」的评论？`
+    if (!window.confirm(msg)) return
+    if (childIds.length > 0) await supabase.from('post_comments').delete().in('id', childIds)
+    const { error } = await supabase.from('post_comments').delete().eq('id', comment.id)
+    if (error) alert(`删除失败：${error.message}`)
+    else setPostComments(prev => prev.filter(c => c.id !== comment.id && !childIds.includes(c.id)))
+  }
+
+  // 讨论区：管理员删除子回复
+  const handleDeletePostReply = async (reply) => {
+    if (!window.confirm(`确认删除「${reply.name}」的回复？`)) return
+    const { error } = await supabase.from('post_comments').delete().eq('id', reply.id)
+    if (error) alert(`删除失败：${error.message}`)
+    else setPostComments(prev => prev.filter(c => c.id !== reply.id))
   }
 
   // 站长回复（发邮件）
@@ -421,16 +471,92 @@ function App() {
                       <span className="bg-[#000080] text-white px-2 py-0.5 text-sm italic">RE:</span> 讨论区
                     </h3>
                     <div className="space-y-4 mb-8">
-                      {postComments.length === 0 ? (
+                      {postCommentTree.length === 0 ? (
                         <p className="text-gray-500 italic text-sm">暂无回帖，欢迎留言！</p>
                       ) : (
-                        postComments.map((c, index) => (
+                        postCommentTree.map((c, index) => (
                           <div key={c.id} className="bg-[#f5f5f5] border border-black shadow-[2px_2px_0_#000]">
+                            {/* 评论头部 */}
                             <div className="bg-[#000080] text-white px-3 py-1.5 flex justify-between text-[10px]">
                               <span className="font-bold">#{index + 1} 访客: {c.name}</span>
-                              <span className="opacity-75">{new Date(c.created_at).toLocaleString('zh-CN')}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="opacity-75">{new Date(c.created_at).toLocaleString('zh-CN')}</span>
+                                {isAdmin && (
+                                  <button onClick={() => handleDeletePostComment(c)}
+                                    className="text-red-300 hover:text-white border border-red-300 hover:border-white px-1.5 py-0.5 transition-colors">
+                                    🗑 删除
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                            <div className="p-4 text-sm prose-sm"><ReactMarkdown>{String(c.content || '')}</ReactMarkdown></div>
+                            {/* 评论正文 */}
+                            <div className="p-4">
+                              <div className="text-sm prose-sm">
+                                <ReactMarkdown>{String(c.content || '')}</ReactMarkdown>
+                              </div>
+                              {/* 子回复列表 */}
+                              {c.replies && c.replies.length > 0 && (
+                                <div className="mt-3 space-y-2 pl-4 border-l-2 border-[#c0c0c0]">
+                                  {c.replies.map(r => (
+                                    <div key={r.id} className="bg-white border border-gray-300 p-3">
+                                      <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1.5">
+                                        <span className="font-bold text-[#000080]">↳ {r.name}</span>
+                                        <div className="flex items-center gap-2">
+                                          <span>{new Date(r.created_at).toLocaleString('zh-CN')}</span>
+                                          {isAdmin && (
+                                            <button onClick={() => handleDeletePostReply(r)}
+                                              className="text-red-400 hover:text-red-600 transition-colors">🗑</button>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="text-sm prose-sm">
+                                        <ReactMarkdown>{String(r.content || '')}</ReactMarkdown>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {/* 访客回复按钮 / 表单 */}
+                              <div className="mt-3">
+                                {postReplyTo?.id === c.id ? (
+                                  <div className="bg-[#f0f4ff] border border-[#000080] p-4 space-y-3">
+                                    <div className="text-xs font-bold text-[#000080]">↩ 回复 {c.name}：</div>
+                                    <textarea value={postReplyText} onChange={e => setPostReplyText(e.target.value)}
+                                      placeholder="支持 Markdown..."
+                                      className="w-full h-20 p-2 border border-black text-sm bg-white resize-none focus:outline-none focus:border-[#000080]" autoFocus />
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="block text-[10px] font-bold mb-1">昵称 *</label>
+                                        <input type="text" value={name} onChange={e => setName(e.target.value)}
+                                          className="w-full p-1.5 border border-black bg-white text-xs focus:outline-none" placeholder="必填" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[10px] font-bold mb-1">邮箱 *（不公开）</label>
+                                        <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                                          className={`w-full p-1.5 border bg-white text-xs focus:outline-none ${email && !EMAIL_REGEX.test(email) ? 'border-red-500' : 'border-black'}`}
+                                          placeholder="example@email.com" />
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button onClick={handlePostVisitorReply}
+                                        disabled={!name.trim() || !email.trim() || !postReplyText.trim() || (!!email && !EMAIL_REGEX.test(email))}
+                                        className="px-5 py-1.5 bg-[#000080] text-white text-xs font-bold border border-black hover:bg-[#0000c0] disabled:opacity-40">
+                                        发表回复
+                                      </button>
+                                      <button onClick={() => { setPostReplyTo(null); setPostReplyText('') }}
+                                        className="px-5 py-1.5 bg-gray-400 text-white text-xs font-bold border border-black">
+                                        取消
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => { setPostReplyTo(c); setPostReplyText('') }}
+                                    className="text-xs text-[#000080] hover:underline flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
+                                    ↩ 回复此评论
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         ))
                       )}
