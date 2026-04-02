@@ -49,6 +49,11 @@ function App() {
   const [postReplyTo, setPostReplyTo] = useState(null)
   const [postReplyText, setPostReplyText] = useState('')
 
+  // 音乐播放器
+  const [playerOpen, setPlayerOpen] = useState(false)
+  const [playerSource, setPlayerSource] = useState('netease') // 'netease' | 'spotify'
+
+
   const tabs = ['首页', '个人简介', '我的日志', '留言板']
 
   const allTags = useMemo(() => {
@@ -235,7 +240,7 @@ function App() {
         body: { to: comment.email, name: comment.name, originalMessage: comment.content, reply: replyText.trim() }
       })
       if (fnError) alert(`回复已保存，但邮件发送失败：${fnError.message}`)
-      else alert(`✅ 回复已发送，并已邮件通知 ${comment.name}（${comment.email}）`)
+      else alert(`回复已发送，并已邮件通知 ${comment.name}（${comment.email}）`)
       setComments(prev => prev.map(c => c.id === comment.id ? { ...c, reply: replyText.trim() } : c))
       setReplyingTo(null); setReplyText('')
     } catch (err) { alert(`操作失败：${err.message}`) }
@@ -342,7 +347,7 @@ function App() {
   }
 
   // 建议06: 热帖阈值
-  const HOT_THRESHOLD = 5
+  const HOT_THRESHOLD = 100
 
   // 访客回复表单（内联组件）
   const VisitorReplyForm = () => (
@@ -442,7 +447,7 @@ function App() {
                 </div>
                 <div className="bg-[#f8f4e8] grid grid-cols-2 md:grid-cols-4 gap-0 divide-x-2 divide-[#808080] text-sm">
                   {[
-                    { label: '最近在做', value: '学习 Solidity + DevRel 项目' },
+                    { label: '最近在做', value: '学习前端、AI 和 Web3 协议层，参加黑客松' },
                     { label: '当前在读', value: '「在轮下」— 黑塞' },
                     { label: '心情', value: '忙碌但充实 🎵' },
                     { label: '本站数据', value: `${posts.length} 篇日志 · ${comments.length} 条留言` },
@@ -501,7 +506,7 @@ function App() {
                     <a href="https://x.com/EASTERN_Z_CHILD" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">X</a>
                     {' | '}
                     <a href="https://github.com/BareerahBenjamin" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">GitHub</a><br />
-                    Email: bareerahmoooo@gmail.com
+                    <a href="bareerahmoooo@gmail.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">Email</a><br /> 
                   </div>
                 </div>
               </div>
@@ -895,14 +900,14 @@ function App() {
         {/* 建议08: 友情链接区 */}
         <div className="bg-[#e8e8e8] border-b-2 border-[#808080] px-6 py-5">
           <div className="max-w-4xl mx-auto">
-            <div className="text-xs font-bold text-gray-600 mb-3 tracking-widest">🔗 友情链接 / Blogroll</div>
+            <div className="text-xs font-bold text-gray-600 mb-3 tracking-widest">🔗 一些链接 / Blogroll</div>
             <div className="flex flex-wrap gap-3">
               {[
                 { name: 'GitHub', url: 'https://github.com/BareerahBenjamin' },
                 { name: 'X / Twitter', url: 'https://x.com/EASTERN_Z_CHILD' },
                 { name: 'Ethereum.org', url: 'https://ethereum.org' },
                 { name: 'Vitalik\'s Blog', url: 'https://vitalik.eth.limo' },
-                { name: 'Supabase', url: 'https://supabase.com' },
+                /*{ name: 'Supabase', url: 'https://supabase.com' },*/
               ].map(({ name, url }) => (
                 <a key={name} href={url} target="_blank" rel="noopener noreferrer"
                   className="text-xs text-[#0000cc] hover:text-[#cc0000] underline border border-[#808080] px-3 py-1 bg-white hover:bg-[#f0f0f0] shadow-[1px_1px_0_#808080] transition-colors">
@@ -924,6 +929,85 @@ function App() {
           )}
         </div>
       </footer>
+      {/* ── 浮动音乐播放器 ─────────────────────────────── */}
+      {/*
+        ★ 配置说明：
+        【网易云】将下方 NETEASE_SONG_ID 替换为歌曲/歌单 ID
+          - 歌曲：打开网易云网页版，地址栏 ?id=XXXXXXX 即为 ID，type=2
+          - 歌单：歌单页地址栏 ?id=XXXXXXX，type=0
+        【Spotify】将 SPOTIFY_PLAYLIST_ID 替换为歌单/单曲 ID
+          - 右键歌单 → 分享 → 复制链接，链接末尾的字符串即为 ID
+      */}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+
+        {/* 展开后的播放器面板 */}
+        {playerOpen && (
+          <div className="border-4 border-black shadow-[4px_4px_0_#000] overflow-hidden w-[330px]">
+            {/* 面板标题栏 */}
+            <div className="bg-[#000080] text-white px-3 py-1.5 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px]">♪ 正在播放</span>
+                {/* 切换源按钮 */}
+                <div className="flex gap-1 ml-2">
+                  <button
+                    onClick={() => setPlayerSource('netease')}
+                    className={`px-2 py-0.5 text-[9px] border transition-colors ${playerSource === 'netease' ? 'bg-white text-[#000080] border-white' : 'border-white/50 hover:border-white'}`}
+                  >
+                    网易云
+                  </button>
+                  <button
+                    onClick={() => setPlayerSource('spotify')}
+                    className={`px-2 py-0.5 text-[9px] border transition-colors ${playerSource === 'spotify' ? 'bg-white text-[#000080] border-white' : 'border-white/50 hover:border-white'}`}
+                  >
+                    Spotify
+                  </button>
+                </div>
+              </div>
+              <button onClick={() => setPlayerOpen(false)} className="hover:text-yellow-300 text-base leading-none">×</button>
+            </div>
+
+            {/* 播放器 iframe */}
+            {playerSource === 'netease' ? (
+              <iframe
+                title="网易云音乐"
+                frameBorder="no"
+                marginWidth="0"
+                marginHeight="0"
+                width="330"
+                height="110"
+                /* ↓↓↓ 把 type=0 改成 type=2 可以播放单曲，id 换成你的歌单/歌曲 ID ↓↓↓ */
+                src="//music.163.com/outchain/player?type=0&id=17870929430&auto=0&height=90"
+              />
+            ) : (
+              <iframe
+                title="Spotify"
+                style={{ borderRadius: 0 }}
+                src="https://open.spotify.com/playlist/6Dhv2FRclwORWFYymvkG4H?si=FtvYE5WpQ0ePJYKJaSlTYg&pi=ZtD2leYZRwWc3"
+                /* ↑↑↑ 把 playlist/XXXXXX 换成你自己的歌单 ID ↑↑↑ */
+                width="330"
+                height="152"
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+              />
+            )}
+          </div>
+        )}
+
+        {/* 收起状态的悬浮按钮 */}
+        <button
+          onClick={() => setPlayerOpen(v => !v)}
+          className={`
+            w-12 h-12 border-4 border-black shadow-[3px_3px_0_#000]
+            text-xl font-bold flex items-center justify-center
+            transition-all active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
+            ${playerOpen ? 'bg-[#000080] text-white' : 'bg-[#c0c0c0] text-black hover:bg-[#d0d0d0]'}
+          `}
+          title={playerOpen ? '收起播放器' : '打开音乐播放器'}
+        >
+          {playerOpen ? '♪' : '♫'}
+        </button>
+      </div>
     </div>
   )
 }
