@@ -5,7 +5,10 @@
 /* --- 基础布局 --- */
 body {
   font-family: 'Courier New', monospace;
-  background: #c0c0c0;
+  /* 建议09: 细微点阵纹理背景 */
+  background-color: #c0c0c0;
+  background-image: radial-gradient(#adadad 1px, transparent 1px);
+  background-size: 8px 8px;
 }
 
 .forum-header {
@@ -56,7 +59,7 @@ body {
   font-size: 0.9em;
 }
 
-/* 2. 代码块容器：收紧上下间距 */
+/* 2. 代码块容器 */
 .code-block-wrapper {
   @apply relative my-2; 
 }
@@ -65,45 +68,38 @@ body {
   margin-top: 2rem; 
 }
 
-/* 3. 语言标签：缩小尺寸并贴合边缘 */
+/* 3. 语言标签 */
 .code-lang-tag {
   @apply absolute top-0 right-0 px-2 py-0.5 text-[11px] text-gray-500 font-mono uppercase opacity-70;
 }
 
-/* 4. 代码预格式化框：减小内边距，去掉多余空间 */
+/* 4. 代码预格式化框 */
 .prose pre { 
   @apply bg-[#1e1e1e] text-gray-100 p-3 overflow-x-auto !important; 
   border-radius: 2px;
-  margin: 0 !important; /* 由 wrapper 统一控制间距 */
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.5); /* 内部阴影 */
-  border-bottom: 2px solid #000; /* 底部加深，符合BBS风格 */
+  margin: 0 !important;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  border-bottom: 2px solid #000;
 }
 
 /* 5. 内部代码文字 */
 .prose pre code {
   @apply bg-transparent p-0 text-gray-100;
   font-family: 'Courier New', monospace !important;
-  font-size: 15px; /* 稍微缩小字号 */
+  font-size: 15px;
   line-height: 1.5;
 }
 
-/* 6. 简单的滚动条 */
-.prose pre::-webkit-scrollbar {
-  height: 6px;
-}
-.prose pre::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 3px;
-}
+/* 6. 滚动条 */
+.prose pre::-webkit-scrollbar { height: 6px; }
+.prose pre::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
 .prose {
-  /* 确保长网址和长单词能自动换行 */
   word-wrap: break-word;
   overflow-wrap: break-word;
-  word-break: break-all; /* 强制拆分超长字符串 */
+  word-break: break-all;
 }
 
-/* 专门针对链接进行优化 */
 .prose a {
   word-break: break-all;
   white-space: normal;
@@ -112,4 +108,12 @@ body {
 .prose img {
   @apply max-w-full h-auto mx-auto my-4 border-2 border-black shadow-[2px_2px_0_#000];
   display: block;
+}
+
+/* 日志列表摘要截断 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

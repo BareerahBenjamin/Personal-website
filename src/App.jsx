@@ -321,6 +321,29 @@ function App() {
 
   useEffect(() => { if (localStorage.getItem('bbs_admin') === 'true') setIsAdmin(true) }, [])
 
+  // ── 辅助函数 ────────────────────────────────────────
+  // 建议05: 阅读时长估算（300字/分钟）
+  const readingTime = (content) => {
+    const chars = (content || '').replace(/\s/g, '').length
+    const mins = Math.max(1, Math.round(chars / 300))
+    return `约 ${mins} 分钟`
+  }
+
+  // 建议04: 纯文本摘要（去掉 Markdown 标记）
+  const getExcerpt = (content, len = 80) => {
+    const plain = (content || '')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/\*\*|__|\*|_|~~|`/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\n+/g, ' ')
+      .trim()
+    return plain.length > len ? plain.slice(0, len) + '...' : plain
+  }
+
+  // 建议06: 热帖阈值
+  const HOT_THRESHOLD = 5
+
   // 访客回复表单（内联组件）
   const VisitorReplyForm = () => (
     <div className="mt-3 bg-[#f0f4ff] border border-[#000080] p-4 space-y-3">
@@ -403,11 +426,38 @@ function App() {
         <div className="forum-main p-8 min-h-[70vh]">
 
           {activeTab === '首页' && (
-            <div className="text-center py-12">
-              <div className="mx-auto w-24 h-24 bg-[#000080] text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-[4px_4px_0_#000]">🐱</div>
-              <h2 className="text-3xl mb-4">欢迎来到我的个人网站</h2>
-              <p className="text-lg max-w-md mx-auto">这里记录我对学习、生活的一些思考。<br />欢迎交流～</p>
-              <div className="mt-10 text-sm text-gray-600">最新更新：{posts[0]?.title} • {posts[0]?.date}</div>
+            <div>
+              {/* 欢迎区 */}
+              <div className="text-center py-10">
+                <div className="mx-auto w-24 h-24 bg-[#000080] text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-[4px_4px_0_#000]">🐱</div>
+                <h2 className="text-3xl mb-4">欢迎来到我的个人网站</h2>
+                <p className="text-lg max-w-md mx-auto">这里记录我对学习、生活的一些思考。<br />欢迎交流～</p>
+              </div>
+
+              {/* 建议01: 状态公告栏 */}
+              <div className="border-4 border-[#808080] shadow-[3px_3px_0_#000] mb-6 overflow-hidden">
+                <div className="bg-[#000080] text-white px-4 py-2 text-xs font-bold flex items-center justify-between">
+                  <span>📌 公告栏 / Status Board</span>
+                  <span className="opacity-60">{new Date().toLocaleDateString('zh-CN')}</span>
+                </div>
+                <div className="bg-[#f8f4e8] grid grid-cols-2 md:grid-cols-4 gap-0 divide-x-2 divide-[#808080] text-sm">
+                  {[
+                    { label: '最近在做', value: '学习 Solidity + DevRel 项目' },
+                    { label: '当前在读', value: '「在轮下」— 黑塞' },
+                    { label: '心情', value: '忙碌但充实 🎵' },
+                    { label: '本站数据', value: `${posts.length} 篇日志 · ${comments.length} 条留言` },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="px-4 py-3">
+                      <div className="text-[10px] text-gray-500 mb-1">{label}</div>
+                      <div className="text-xs font-bold leading-snug">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-500 text-center pb-4">
+                最新更新：{posts[0]?.title} • {posts[0]?.date}
+              </div>
             </div>
           )}
 
@@ -427,7 +477,25 @@ function App() {
                 <div className="md:w-2/3 space-y-6 text-sm">
                   <p>本科西安某211，现港硕在读。</p>
                   <p>目前对以太坊生态和 AI 充满热情，正在积极学习 Solidity、Agent 相关知识。</p>
-                  <div><strong>技术栈：</strong><br />Python，React<br />熟悉Web3基础、AI Agent测试</div>
+                  <div>
+                    <strong className="block mb-2">技术栈：</strong>
+                    {/* 建议02: 技术栈徽章 */}
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { name: 'Python', color: 'bg-[#3776AB] text-white' },
+                        { name: 'React', color: 'bg-[#61DAFB] text-[#1a1a2e]' },
+                        { name: 'Solidity', color: 'bg-[#363636] text-white' },
+                        { name: 'Web3', color: 'bg-[#F16822] text-white' },
+                        { name: 'AI Agent', color: 'bg-[#000080] text-white' },
+                        { name: 'Vite', color: 'bg-[#646CFF] text-white' },
+                        { name: 'Supabase', color: 'bg-[#3ECF8E] text-[#1a1a1a]' },
+                      ].map(({ name, color }) => (
+                        <span key={name} className={`${color} px-3 py-1 text-xs font-bold border-2 border-black shadow-[2px_2px_0_#000]`}>
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                   <div>
                     <strong>联系方式：</strong><br />
                     <a href="https://x.com/EASTERN_Z_CHILD" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">X</a>
@@ -615,22 +683,40 @@ function App() {
                   </div>
                 </div>
                 <div className="space-y-6">
-                  {filteredPosts.map(post => (
-                    <div key={post.id} onClick={() => handlePostClick(post)}
-                      className="post p-6 cursor-pointer bg-white border-2 border-black hover:bg-[#f0f0f0] transition-all group shadow-[3px_3px_0_#000] active:translate-x-0.5 active:translate-y-0.5">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className="text-lg font-bold group-hover:underline text-[#000080]">{post.title}</div>
-                          <div className="text-[10px] text-gray-500 mt-1">{post.date} • 浏览 {post.views}</div>
-                        </div>
-                        <div className="flex gap-1 flex-wrap justify-end">
-                          {Array.isArray(post.tags) ? post.tags.map(tag => (
-                            <span key={tag} className={`px-2 py-0.5 text-[9px] border ${filterTag === tag ? 'bg-black text-white border-black' : 'bg-[#e8e8e8] text-gray-600 border-gray-400'}`}>#{tag}</span>
-                          )) : null}
+                  {filteredPosts.map(post => {
+                    const isHot = post.views >= HOT_THRESHOLD
+                    return (
+                      <div key={post.id} onClick={() => handlePostClick(post)}
+                        className="post p-6 cursor-pointer bg-white border-2 border-black hover:bg-[#f0f0f0] transition-all group shadow-[3px_3px_0_#000] active:translate-x-0.5 active:translate-y-0.5">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1 min-w-0 pr-3">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="text-lg font-bold group-hover:underline text-[#000080]">{post.title}</div>
+                              {/* 建议06: 热帖标记 */}
+                              {isHot && (
+                                <span className="bg-[#cc0000] text-white text-[9px] font-bold px-2 py-0.5 border border-[#800000] shadow-[1px_1px_0_#500]">
+                                  🔥 热帖
+                                </span>
+                              )}
+                            </div>
+                            {/* 建议05: 阅读时长 */}
+                            <div className="text-[10px] text-gray-500 mt-1">
+                              {post.date} · 浏览 {post.views} · {readingTime(post.content)}
+                            </div>
+                            {/* 建议04: 摘要预览 */}
+                            <div className="text-xs text-gray-600 mt-2 leading-relaxed line-clamp-2">
+                              {getExcerpt(post.content)}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1 items-end flex-shrink-0">
+                            {Array.isArray(post.tags) ? post.tags.map(tag => (
+                              <span key={tag} className={`px-2 py-0.5 text-[9px] border ${filterTag === tag ? 'bg-black text-white border-black' : 'bg-[#e8e8e8] text-gray-600 border-gray-400'}`}>#{tag}</span>
+                            )) : null}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )
@@ -805,16 +891,38 @@ function App() {
         </div>
       </main>
 
-      <footer className="text-center py-8 text-xs text-gray-600 border-t-4 border-[#808080] mt-12">
-        © 2026 Bareerah • All Rights Reserved
-        <span onClick={() => {
-          const pass = prompt('请输入管理员密码：')
-          if (pass === import.meta.env.VITE_ADMIN_PASSWORD) { setIsAdmin(true); localStorage.setItem('bbs_admin', 'true'); alert('✅ 已进入管理员模式') }
-          else if (pass !== null) { alert('密码错误') }
-        }} className="cursor-default hover:text-black transition-colors ml-1">.</span>
-        {isAdmin && (
-          <button onClick={() => { setIsAdmin(false); localStorage.removeItem('bbs_admin') }} className="ml-4 text-red-500 hover:underline cursor-pointer">[退出管理员]</button>
-        )}
+      <footer className="border-t-4 border-[#808080] mt-12">
+        {/* 建议08: 友情链接区 */}
+        <div className="bg-[#e8e8e8] border-b-2 border-[#808080] px-6 py-5">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-xs font-bold text-gray-600 mb-3 tracking-widest">🔗 友情链接 / Blogroll</div>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { name: 'GitHub', url: 'https://github.com/BareerahBenjamin' },
+                { name: 'X / Twitter', url: 'https://x.com/EASTERN_Z_CHILD' },
+                { name: 'Ethereum.org', url: 'https://ethereum.org' },
+                { name: 'Vitalik\'s Blog', url: 'https://vitalik.eth.limo' },
+                { name: 'Supabase', url: 'https://supabase.com' },
+              ].map(({ name, url }) => (
+                <a key={name} href={url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-[#0000cc] hover:text-[#cc0000] underline border border-[#808080] px-3 py-1 bg-white hover:bg-[#f0f0f0] shadow-[1px_1px_0_#808080] transition-colors">
+                  {name}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="text-center py-6 text-xs text-gray-600">
+          © 2026 Bareerah • All Rights Reserved
+          <span onClick={() => {
+            const pass = prompt('请输入管理员密码：')
+            if (pass === import.meta.env.VITE_ADMIN_PASSWORD) { setIsAdmin(true); localStorage.setItem('bbs_admin', 'true'); alert('✅ 已进入管理员模式') }
+            else if (pass !== null) { alert('密码错误') }
+          }} className="cursor-default hover:text-black transition-colors ml-1">.</span>
+          {isAdmin && (
+            <button onClick={() => { setIsAdmin(false); localStorage.removeItem('bbs_admin') }} className="ml-4 text-red-500 hover:underline cursor-pointer">[退出管理员]</button>
+          )}
+        </div>
       </footer>
     </div>
   )
