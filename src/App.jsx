@@ -121,7 +121,7 @@ function App() {
     const fetchComments = async () => {
       setLoading(true)
       const { data, error } = await supabase
-        .from('messages')
+        .from('message')
         .select('*')
         .order('created_at', { ascending: false })
       if (error) console.error(error)
@@ -132,15 +132,15 @@ function App() {
     fetchComments()
 
     const channel = supabase
-      .channel('messages-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+      .channel('message-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'message' }, (payload) => {
         // 防止与 .select() 手动插入重复
         setComments(prev => {
           const exists = prev.some(c => c.id === payload.new.id)
           return exists ? prev : [payload.new, ...prev]
         })
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'message' }, (payload) => {
         // ✅ FIX 2: 实时同步站长回复
         setComments(prev => prev.map(c => c.id === payload.new.id ? payload.new : c))
       })
@@ -186,7 +186,7 @@ function App() {
 
     // ✅ FIX 1: 加 .select() 拿到插入后的数据，立即更新本地 state，不再完全依赖实时订阅
     const { data, error } = await supabase
-      .from('messages')
+      .from('message')
       .insert([{
         name: name.trim(),
         email: email.trim(),
@@ -260,9 +260,9 @@ function App() {
 
     setSendingReply(true)
     try {
-      // 1. 将回复内容保存到数据库（需要 messages 表有 reply 列，详见配套 SQL）
+      // 1. 将回复内容保存到数据库（需要 message 表有 reply 列，详见配套 SQL）
       const { error: updateError } = await supabase
-        .from('messages')
+        .from('message')
         .update({ reply: replyText.trim() })
         .eq('id', comment.id)
 
