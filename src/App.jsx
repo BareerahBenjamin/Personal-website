@@ -50,8 +50,8 @@ function App() {
   const [postReplyText, setPostReplyText] = useState('')
 
   // 音乐播放器
-  const [playerOpen, setPlayerOpen] = useState(false)
-  const [playerSource, setPlayerSource] = useState('netease') // 'netease' | 'spotify'
+  const [playerOpen, setPlayerOpen] = useState(true)
+  // const [playerSource, setPlayerSource] = useState('netease') // 'netease' | 'spotify'
 
 
   const tabs = ['首页', '个人简介', '我的日志', '留言板']
@@ -945,52 +945,20 @@ function App() {
           <div className="border-4 border-black shadow-[4px_4px_0_#000] overflow-hidden w-[330px]">
             {/* 面板标题栏 */}
             <div className="bg-[#000080] text-white px-3 py-1.5 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px]">♪ 正在播放</span>
-                {/* 切换源按钮 */}
-                <div className="flex gap-1 ml-2">
-                  <button
-                    onClick={() => setPlayerSource('netease')}
-                    className={`px-2 py-0.5 text-[9px] border transition-colors ${playerSource === 'netease' ? 'bg-white text-[#000080] border-white' : 'border-white/50 hover:border-white'}`}
-                  >
-                    网易云
-                  </button>
-                  <button
-                    onClick={() => setPlayerSource('spotify')}
-                    className={`px-2 py-0.5 text-[9px] border transition-colors ${playerSource === 'spotify' ? 'bg-white text-[#000080] border-white' : 'border-white/50 hover:border-white'}`}
-                  >
-                    Spotify
-                  </button>
-                </div>
-              </div>
+              <span className="text-[10px]">♪ 正在播放</span>
               <button onClick={() => setPlayerOpen(false)} className="hover:text-yellow-300 text-base leading-none">×</button>
             </div>
 
-            {/* 播放器 iframe */}
-            {playerSource === 'netease' ? (
-              <iframe
-                title="网易云音乐"
-                frameBorder="no"
-                marginWidth="0"
-                marginHeight="0"
-                width="330"
-                height="110"
-                /* ↓↓↓ 把 type=0 改成 type=2 可以播放单曲，id 换成你的歌单/歌曲 ID ↓↓↓ */
-                src="//music.163.com/outchain/player?type=0&id=17870929430&auto=0&height=90"
-              />
-            ) : (
-              <iframe
-                title="Spotify"
-                style={{ borderRadius: 0 }}
-                src="https://open.spotify.com/playlist/6Dhv2FRclwORWFYymvkG4H?si=FtvYE5WpQ0ePJYKJaSlTYg&pi=ZtD2leYZRwWc3"
-                /* ↑↑↑ 把 playlist/XXXXXX 换成你自己的歌单 ID ↑↑↑ */
-                width="330"
-                height="152"
-                frameBorder="0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-              />
-            )}
+            {/* 网易云播放器，auto=1 自动播放 */}
+            <iframe
+              title="网易云音乐"
+              frameBorder="no"
+              marginWidth="0"
+              marginHeight="0"
+              width="330"
+              height="110"
+              src="//music.163.com/outchain/player?type=0&id=17870929430&auto=1&height=90"
+            />
           </div>
         )}
 
