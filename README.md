@@ -4,8 +4,8 @@
 
 **线上地址**：https://bareerahsite.dpdns.org/
 
-![进入动画](https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/intro.png)
-![网站截图](https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/index.png)  
+![进入动画](https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/Automation.png)
+![网站截图](https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/intro.png)  
 
 ---
 
