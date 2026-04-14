@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import remarkBreaks from 'remark-breaks'
 import { useState, useEffect, useMemo, useRef } from 'react'
+import Intro from "./Intro"
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -26,6 +27,11 @@ const PLAYLIST = [
 ]
 
 function App() {
+
+  const[showIntro, setShowIntro] = useState(
+    () => !sessionStorage.getItem('intro_seen')
+  )
+
   const [activeTab, setActiveTab] = useState('首页')
   const [posts, setPosts] = useState([])
   const [comments, setComments] = useState([])
@@ -425,6 +431,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#c0c0c0] font-bbs text-black">
+
+      {showIntro && (
+        <Intro onEnter={() => {
+          sessionStorage.setItem('intro_seen', '1')
+          setShowIntro(false);
+        }}/>
+      )}
 
       <header className="forum-header py-6">
         <div className="max-w-4xl mx-auto px-6 flex justify-between items-center">
