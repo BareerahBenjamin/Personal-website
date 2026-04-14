@@ -357,6 +357,15 @@ function App() {
 
   useEffect(() => { if (localStorage.getItem('bbs_admin') === 'true') setIsAdmin(true) }, [])
 
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal')
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
+    }, { threshold: 0.1 })
+    els.forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [activeTab])
+  
   // ── 辅助函数 ────────────────────────────────────────
   // 建议05: 阅读时长估算（300字/分钟）
   const readingTime = (content) => {
@@ -420,10 +429,17 @@ function App() {
       <header className="forum-header py-6">
         <div className="max-w-4xl mx-auto px-6 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold tracking-widest">Bareerah 的小屋</h1>
+            <h1 className="text-4xl font-bold tracking-widest" style={{animation:'title-flicker 9s infinite'}}>
+              Bareerah 的小屋
+              <span className="pixel-cursor" />
+            </h1>
             <p className="text-sm mt-1 opacity-90">海椰的个人网站</p>
           </div>
-          <div className="text-right text-xs opacity-80">欢迎光临<br />当前在线：<span className="font-bold text-yellow-300">{onlineCount}</span></div>
+          <div className="text-right text-xs opacity-80">
+            欢迎光临<br />
+            <span className="online-dot" />
+            当前在线：<span className="font-bold text-yellow-300">{onlineCount}</span>
+          </div>
         </div>
       </header>
 
@@ -464,17 +480,22 @@ function App() {
           {activeTab === '首页' && (
             <div>
               {/* 欢迎区 */}
-              <div className="text-center py-10">
+              <div className="text-center py-10 reveal">
                 <div className="mx-auto w-24 h-24 bg-[#000080] text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-[4px_4px_0_#000]">🐱</div>
                 <h2 className="text-3xl mb-4">欢迎来到我的个人网站</h2>
                 <p className="text-lg max-w-md mx-auto">这里记录我对学习、生活的一些思考。<br />欢迎交流～</p>
               </div>
 
               {/* 建议01: 状态公告栏 */}
-              <div className="border-4 border-[#808080] shadow-[3px_3px_0_#000] mb-6 overflow-hidden">
+              <div className="border-4 border-[#808080] shadow-[3px_3px_0_#000] mb-6 overflow-hidden reveal">
                 <div className="bg-[#000080] text-white px-4 py-2 text-xs font-bold flex items-center justify-between">
                   <span>📌 公告栏 / Status Board</span>
-                  <span className="opacity-60">{new Date().toLocaleDateString('zh-CN')}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="opacity-50 text-[10px] mr-2">{new Date().toLocaleDateString('zh-CN')}</span>
+                    {['_','□','×'].map(c => (
+                      <span key={c} className="titlebar-btn">{c}</span>
+                    ))}
+                  </div>
                 </div>
                 <div className="bg-[#f8f4e8] grid grid-cols-2 md:grid-cols-4 gap-0 divide-x-2 divide-[#808080] text-sm">
                   {[
@@ -498,11 +519,11 @@ function App() {
           )}
 
           {activeTab === '个人简介' && (
-            <div>
+            <div className="reveal">
               <h2 className="text-2xl border-b-4 border-black pb-2 mb-6">关于我</h2>
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="md:w-1/3">
-                  <div className="bg-[#000080] text-white p-6 text-center shadow-[4px_4px_0_#000]">
+                  <div className="bg-[#000080] text-white p-6 text-center shadow-[4px_4px_0_#000] about-profile-card">
                     <div className="w-32 h-32 mx-auto bg-white rounded-full overflow-hidden border-4 border-white">
                       <img src="https://qvpowobddnudxijvbgph.supabase.co/storage/v1/object/public/person/Avatar.jpg" alt="头像" className="w-full h-full object-cover" />
                     </div>
@@ -532,13 +553,26 @@ function App() {
                       ))}
                     </div>
                   </div>
-                  <div>
-                    <strong>联系方式：</strong><br />
-                    <a href="https://x.com/EASTERN_Z_CHILD" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">X</a>
-                    {' | '}
-                    <a href="https://github.com/BareerahBenjamin" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">GitHub</a>
-                    {' | '}
-                    <a href="bareerahmoooo@gmail.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-red-600 underline">Email</a><br /> 
+                  <div className="border-2 border-[#808080] overflow-hidden shadow-[2px_2px_0_#000] mt-4">
+                    <div className="bg-[#008080] text-white px-3 py-1.5 text-xs font-bold flex justify-between items-center">
+                      <span>📬 联系方式 / Contact</span>
+                      <div className="flex gap-1">
+                        {['_','□','×'].map(c=><span key={c} className="titlebar-btn">{c}</span>)}
+                      </div>
+                    </div>
+                    <div className="bg-[#f0f4ff] p-3 space-y-2">
+                      {[
+                        { icon:'𝕏', label:'@EASTERN_Z_CHILD', href:'https://x.com/EASTERN_Z_CHILD' },
+                        { icon:'GH', label:'BareerahBenjamin', href:'https://github.com/BareerahBenjamin' },
+                        { icon:'✉', label:'bareerahmoooo@gmail.com', href:'mailto:bareerahmoooo@gmail.com' },
+                      ].map(({ icon, label, href }) => (
+                        <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="contact-row">
+                          <div className="contact-icon-box">{icon}</div>
+                          <span className="text-xs font-bold flex-1">{label}</span>
+                          <span className="text-[10px] opacity-50">→</span>
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
