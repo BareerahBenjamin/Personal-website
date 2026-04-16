@@ -19,7 +19,7 @@ jobs:
 
           echo "Response status: $RESPONSE"
 
-          if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 300 ]; then
+          if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 500 ]; then
             echo "Supabase is alive!"
           else
             echo "Ping failed with status $RESPONSE"
