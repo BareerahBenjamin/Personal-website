@@ -320,3 +320,49 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ── AI 补全建议栏 ─────────────── */
+.ai-suggestion-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f0f4ff;
+  border-top: 1px solid #000080;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 10;
+}
+.ai-suggestion-text {
+  color: #555;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  margin-right: 12px;
+}
+.ai-suggestion-hint {
+  color: #000080;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+.ai-loading-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fffbe6;
+  border-top: 1px solid #cc9900;
+  padding: 4px 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #996600;
+}

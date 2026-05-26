@@ -43,8 +43,16 @@ function App() {
   const [editedContent, setEditedContent] = useState('')
   const [editedDate, setEditedDate] = useState('')
   const [editedTags, setEditedTags] = useState('')
+  const [editedPrivate, setEditedPrivate] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // AI 补全状态
+  const [aiSuggestion, setAiSuggestion] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const aiAbortRef = useRef(null)
+  const textareaRef = useRef(null)
+  const aiDebounceRef = useRef(null)
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -92,8 +100,9 @@ function App() {
   }, [posts])
 
   const filteredPosts = useMemo(() => {
-    return filterTag === '全部' ? posts : posts.filter(p => Array.isArray(p.tags) && p.tags.includes(filterTag))
-  }, [posts, filterTag])
+    const visible = isAdmin ? posts : posts.filter(p => !p.is_private)
+    return filterTag === '全部' ? visible : visible.filter(p => Array.isArray(p.tags) && p.tags.includes(filterTag))
+  }, [posts, filterTag, isAdmin])
 
   // 把扁平留言整理为树形（顶级留言 + 子回复）
   const commentTree = useMemo(() => {
@@ -306,6 +315,7 @@ function App() {
   }
 
   const handlePostClick = async (post) => {
+    if (post.is_private && !isAdmin) return
     setSelectedPost(post)
     const { error } = await supabase.rpc('increment_views', { log_id: post.id })
     if (!error) setPosts(prev => prev.map(p => p.id === post.id ? { ...p, views: p.views + 1 } : p))
@@ -317,11 +327,12 @@ function App() {
     setEditingPost(post); setNewPostMode(false)
     setEditedTitle(post.title); setEditedContent(post.content)
     setEditedDate(post.date); setEditedTags(post.tags ? post.tags.join(', ') : '')
+    setEditedPrivate(post.is_private || false)
   }
 
   const startNewPost = () => {
     setNewPostMode(true); setEditingPost(null); setEditedTitle(''); setEditedContent('')
-    setEditedDate(new Date().toISOString().slice(0, 10)); setEditedTags('')
+    setEditedDate(new Date().toISOString().slice(0, 10)); setEditedTags(''); setEditedPrivate(false)
   }
 
   const handleDeletePost = async (id) => {
@@ -342,12 +353,12 @@ function App() {
     try {
       if (newPostMode) {
         const { data, error } = await supabase.from('logs')
-          .insert([{ title: editedTitle.trim(), content: editedContent.trim(), date: editedDate, tags: newTags, views: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }]).select()
+          .insert([{ title: editedTitle.trim(), content: editedContent.trim(), date: editedDate, tags: newTags, views: 0, is_private: editedPrivate, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }]).select()
         if (error) throw error
         if (data) { setPosts(prev => [data[0], ...prev]); alert('日志发布成功！') }
       } else {
         const { data, error } = await supabase.from('logs')
-          .update({ title: editedTitle.trim(), content: editedContent.trim(), date: editedDate, tags: newTags, updated_at: new Date().toISOString() })
+          .update({ title: editedTitle.trim(), content: editedContent.trim(), date: editedDate, tags: newTags, is_private: editedPrivate, updated_at: new Date().toISOString() })
           .eq('id', editingPost.id).select()
         if (error) throw error
         if (data) {
@@ -373,6 +384,55 @@ function App() {
   }, [activeTab])
   
   // ── 辅助函数 ────────────────────────────────────────
+  // AI 补全处理
+  const handleEditorChange = (e) => {
+    const val = e.target.value
+    setEditedContent(val)
+    setAiSuggestion('')
+    clearTimeout(aiDebounceRef.current)
+    aiDebounceRef.current = setTimeout(() => {
+      fetchAiCompletion(val, e.target.selectionStart)
+    }, 1500)
+  }
+
+  const handleEditorKeyDown = (e) => {
+    if (e.key === 'Tab' && aiSuggestion) {
+      e.preventDefault()
+      const ta = textareaRef.current
+      const pos = ta.selectionStart
+      const before = editedContent.slice(0, pos)
+      const after = editedContent.slice(ta.selectionEnd)
+      const newVal = before + aiSuggestion + after
+      setEditedContent(newVal)
+      setAiSuggestion('')
+      requestAnimationFrame(() => {
+        ta.selectionStart = ta.selectionEnd = pos + aiSuggestion.length
+        ta.focus()
+      })
+    } else if (e.key === 'Escape' && aiSuggestion) {
+      e.preventDefault()
+      setAiSuggestion('')
+    }
+  }
+
+  const fetchAiCompletion = async (content, cursorPos) => {
+    if (!content.trim() || content.length < 20) return
+    if (aiAbortRef.current) aiAbortRef.current.abort()
+    aiAbortRef.current = new AbortController()
+    setAiLoading(true)
+    try {
+      const textBeforeCursor = content.slice(0, cursorPos)
+      const { data, error } = await supabase.functions.invoke('ai-complete', {
+        body: { prefix: textBeforeCursor }
+      })
+      if (error) throw error
+      if (data?.completion) setAiSuggestion(data.completion)
+    } catch (err) {
+      if (err.name !== 'AbortError') console.error('AI completion error:', err)
+    } finally {
+      setAiLoading(false)
+    }
+  }
   // 建议05: 阅读时长估算（300字/分钟）
   const readingTime = (content) => {
     const chars = (content || '').replace(/\s/g, '').length
@@ -478,7 +538,24 @@ function App() {
             </h3>
             <input value={editedTitle} onChange={e => setEditedTitle(e.target.value)} placeholder="标题" className="w-full p-2 border-2 border-black mb-4 focus:outline-none" />
             <input type="date" value={editedDate} onChange={e => setEditedDate(e.target.value)} className="w-full p-2 border-2 border-black mb-4 focus:outline-none" />
-            <textarea value={editedContent} onChange={e => setEditedContent(e.target.value)} placeholder="内容 (支持 Markdown)" className="w-full h-64 p-2 border-2 border-black mb-4 focus:outline-none" />
+            <div className="flex items-center gap-2 mb-4">
+              <input type="checkbox" id="post-private" checked={editedPrivate} onChange={e => setEditedPrivate(e.target.checked)} className="w-4 h-4 border-2 border-black accent-black" />
+              <label htmlFor="post-private" className="text-sm select-none cursor-pointer">🔒 私密文章（仅管理员可见）</label>
+            </div>
+            <div className="relative mb-4">
+              <textarea ref={textareaRef} value={editedContent} onChange={handleEditorChange} onKeyDown={handleEditorKeyDown} placeholder="内容 (支持 Markdown)" className="w-full h-64 p-2 border-2 border-black focus:outline-none resize-y" />
+              {aiSuggestion && (
+                <div className="ai-suggestion-bar">
+                  <span className="ai-suggestion-text">{aiSuggestion}</span>
+                  <span className="ai-suggestion-hint">Tab 接受 · Esc 忽略</span>
+                </div>
+              )}
+              {aiLoading && (
+                <div className="ai-loading-bar">
+                  <span>思考中...</span>
+                </div>
+              )}
+            </div>
             <input value={editedTags} onChange={e => setEditedTags(e.target.value)} placeholder="标签 (逗号分隔)" className="w-full p-2 border-2 border-black mb-4 focus:outline-none" />
             <div className="flex gap-4">
               <button onClick={saveEdit} disabled={loading} className="px-6 py-2 bg-[#000080] text-white font-bold border-2 border-black disabled:opacity-50">{loading ? '保存中...' : '保存'}</button>
@@ -597,7 +674,12 @@ function App() {
               <div>
                 <button onClick={closePost} className="bbs-link mb-6 text-sm hover:underline">← 返回日志列表</button>
                 <div className="post p-8 bg-white border-2 border-black shadow-[4px_4px_0_#000]">
-                  <div className="text-2xl font-bold border-b-2 border-black pb-4">{selectedPost.title}</div>
+                  <div className="text-2xl font-bold border-b-2 border-black pb-4 flex items-center gap-2">
+                    {selectedPost.title}
+                    {selectedPost.is_private && isAdmin && (
+                      <span className="text-xs bg-[#cc9900] text-white px-2 py-0.5 border border-[#996600] font-normal">🔒 私密文章</span>
+                    )}
+                  </div>
                   <div className="text-xs text-gray-600 mt-2 mb-8">发布日期：{selectedPost.date}</div>
                   <div className="prose prose-slate lg:prose-lg max-w-none my-8 prose-headings:font-bold prose-headings:text-black prose-p:text-gray-800 prose-ul:list-disc prose-ul:pl-5 prose-ol:list-decimal prose-ol:pl-5 prose-blockquote:border-l-4 prose-blockquote:border-gray-300">
                     <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeRaw]}
@@ -780,6 +862,11 @@ function App() {
                               {isHot && (
                                 <span className="bg-[#cc0000] text-white text-[9px] font-bold px-2 py-0.5 border border-[#800000] shadow-[1px_1px_0_#500]">
                                   🔥 热帖
+                                </span>
+                              )}
+                              {post.is_private && isAdmin && (
+                                <span className="bg-[#cc9900] text-white text-[9px] font-bold px-2 py-0.5 border border-[#996600] shadow-[1px_1px_0_#500]">
+                                  🔒 私密
                                 </span>
                               )}
                             </div>
