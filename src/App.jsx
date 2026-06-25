@@ -26,6 +26,34 @@ const PLAYLIST = [
   
 ]
 
+// ── 2c. 终端反馈组件 ────────────────────────────────
+function TerminalFeedback({ message, visible }) {
+  const [displayText, setDisplayText] = useState('')
+  const [fading, setFading] = useState(false)
+  useEffect(() => {
+    if (!visible) { setDisplayText(''); setFading(false); return }
+    setFading(false)
+    let i = 0
+    const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19)
+    const fullText = `> ${message}\n> TIMESTAMP: ${timestamp}`
+    const interval = setInterval(() => {
+      i++
+      setDisplayText(fullText.slice(0, i))
+      if (i >= fullText.length) {
+        clearInterval(interval)
+        setTimeout(() => setFading(true), 1500)
+      }
+    }, 30)
+    return () => clearInterval(interval)
+  }, [visible, message])
+  if (!visible) return null
+  return (
+    <div className={`bg-black text-[#00cc44] font-bbs text-xs p-3 border border-[#00cc44] mb-2 transition-opacity duration-500 ${fading ? 'opacity-0' : 'opacity-100'}`}>
+      <pre className="whitespace-pre-wrap">{displayText}<span className="terminal-cursor">█</span></pre>
+    </div>
+  )
+}
+
 function App() {
 
   const[showIntro, setShowIntro] = useState(
@@ -75,6 +103,25 @@ function App() {
   // 讨论区：访客互相回复状态
   const [postReplyTo, setPostReplyTo] = useState(null)
   const [postReplyText, setPostReplyText] = useState('')
+
+  // 项目展示
+  const [projects, setProjects] = useState([])
+  const [editingProject, setEditingProject] = useState(null)
+  const [newProjectMode, setNewProjectMode] = useState(false)
+  const [projectForm, setProjectForm] = useState({
+    name: '', description: '', tech_stack: '', github_url: '', demo_url: '', cover_url: '', sort_order: 0
+  })
+
+  // Tab 切换动画
+  const [tabAnimState, setTabAnimState] = useState('active')
+
+  // 猫咪彩蛋
+  const catClicksRef = useRef([])
+  const [catActivated, setCatActivated] = useState(false)
+
+  // 终端反馈
+  const [msgTerminalFeedback, setMsgTerminalFeedback] = useState({ visible: false, message: '' })
+  const [postTerminalFeedback, setPostTerminalFeedback] = useState({ visible: false, message: '' })
 
   // 音乐播放器
   const audioRef = useRef(null)
@@ -197,6 +244,15 @@ function App() {
     fetchPostComments()
   }, [selectedPost])
 
+  // 项目展示数据
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data } = await supabase.from('projects').select('*').order('sort_order')
+      if (data) setProjects(data)
+    }
+    fetchProjects()
+  }, [])
+
   // 发表顶级留言
   const handleCommentSubmit = async () => {
     if (!name.trim() || !email.trim() || !newComment.trim()) { alert('昵称、电子邮件和留言不能为空'); return }
@@ -210,6 +266,8 @@ function App() {
       if (remember) localStorage.setItem('bbs_user', JSON.stringify({ name: name.trim(), email: email.trim(), remember: true }))
       else localStorage.removeItem('bbs_user')
       setNewComment('')
+      setMsgTerminalFeedback({ visible: true, message: 'MESSAGE SENT SUCCESSFULLY ✓' })
+      setTimeout(() => setMsgTerminalFeedback({ visible: false, message: '' }), 2500)
     }
     setLoading(false)
   }
@@ -237,6 +295,8 @@ function App() {
     if (!error && data) {
       setPostComments(prev => [...prev, data[0]]); setNewPostComment('')
       if (remember) localStorage.setItem('bbs_user', JSON.stringify({ name, email, remember: true }))
+      setPostTerminalFeedback({ visible: true, message: 'COMMENT POSTED SUCCESSFULLY ✓' })
+      setTimeout(() => setPostTerminalFeedback({ visible: false, message: '' }), 2500)
     } else { alert('发布失败，请检查数据库设置') }
   }
 
@@ -455,6 +515,86 @@ function App() {
   // 建议06: 热帖阈值
   const HOT_THRESHOLD = 100
 
+  // ── 项目展示 CRUD ────────────────────────────────────
+  const handleSaveProject = async () => {
+    const payload = {
+      ...projectForm,
+      tech_stack: projectForm.tech_stack.split(',').map(s => s.trim()).filter(Boolean),
+      sort_order: Number(projectForm.sort_order) || 0
+    }
+    if (editingProject) {
+      await supabase.from('projects').update(payload).eq('id', editingProject.id)
+    } else {
+      await supabase.from('projects').insert(payload)
+    }
+    const { data } = await supabase.from('projects').select('*').order('sort_order')
+    if (data) setProjects(data)
+    setEditingProject(null); setNewProjectMode(false)
+    setProjectForm({ name: '', description: '', tech_stack: '', github_url: '', demo_url: '', cover_url: '', sort_order: 0 })
+  }
+
+  const handleDeleteProject = async (id) => {
+    if (!confirm('确定删除此项目？')) return
+    await supabase.from('projects').delete().eq('id', id)
+    const { data } = await supabase.from('projects').select('*').order('sort_order')
+    if (data) setProjects(data)
+  }
+
+  const startEditProject = (p) => {
+    setEditingProject(p); setNewProjectMode(false)
+    setProjectForm({ ...p, tech_stack: p.tech_stack?.join(', ') || '' })
+  }
+
+  // ── 2a. 像素涟漪 ────────────────────────────────────
+  const PIXEL_COLORS = ['#000080', '#00cc44', '#ff0000', '#ffcc00']
+  const handlePixelRipple = (e) => {
+    // 不在表单元素上触发
+    if (['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'].includes(e.target.tagName)) return
+    const burst = document.createElement('span')
+    burst.className = 'pixel-burst'
+    burst.style.left = `${e.clientX - 4}px`
+    burst.style.top = `${e.clientY - 4}px`
+    burst.style.background = PIXEL_COLORS[Math.floor(Math.random() * PIXEL_COLORS.length)]
+    document.body.appendChild(burst)
+    burst.addEventListener('animationend', () => burst.remove())
+  }
+
+  // ── 2b. Tab 切换动画 ────────────────────────────────
+  const handleTabChangeAnimated = (tab) => {
+    setTabAnimState('entering')
+    setTimeout(() => {
+      handleTabChange(tab)
+      setTabAnimState('active')
+    }, 50)
+  }
+
+  // ── 2f. 猫咪彩蛋 ────────────────────────────────────
+  const handleCatClick = (e) => {
+    e.stopPropagation()
+    const now = Date.now()
+    catClicksRef.current.push(now)
+    catClicksRef.current = catClicksRef.current.filter(t => now - t < 2000)
+    if (catClicksRef.current.length >= 5) {
+      catClicksRef.current = []
+      setCatActivated(true)
+      const fishEmojis = ['🐟', '🐠', '🐡', '🦈', '🐙', '🦀']
+      const rect = e.target.getBoundingClientRect()
+      fishEmojis.forEach((fish, i) => {
+        const el = document.createElement('span')
+        el.textContent = fish
+        el.style.cssText = `
+          position:fixed;left:${rect.left + rect.width / 2}px;top:${rect.top + rect.height / 2}px;
+          font-size:24px;pointer-events:none;z-index:10000;
+          --fx:${Math.cos(i * Math.PI / 3) * 120}px;--fy:${Math.sin(i * Math.PI / 3) * 120}px;
+          animation:fish-fly 1s ease-out forwards;
+        `
+        document.body.appendChild(el)
+        el.addEventListener('animationend', () => el.remove())
+      })
+      setTimeout(() => setCatActivated(false), 3000)
+    }
+  }
+
   // 访客回复表单（内联组件）
   const VisitorReplyForm = () => (
     <div className="mt-3 bg-[#f0f4ff] border border-[#000080] p-4 space-y-3">
@@ -490,7 +630,7 @@ function App() {
   )
 
   return (
-    <div className="min-h-screen bg-[#c0c0c0] font-bbs text-black">
+    <div onClick={handlePixelRipple} className="min-h-screen bg-[#c0c0c0] font-bbs text-black">
 
       {showIntro && (
         <Intro onEnter={() => {
@@ -517,9 +657,9 @@ function App() {
       </header>
 
       <nav className="forum-nav py-3 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 flex gap-2 overflow-x-auto">
+        <div className="max-w-4xl mx-auto px-6 flex gap-2 overflow-x-auto items-center">
           {tabs.map(tab => (
-            <button key={tab} onClick={() => handleTabChange(tab)}
+            <button key={tab} onClick={() => handleTabChangeAnimated(tab)}
               className={`px-8 py-2 text-sm border-2 transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white border-b-0 border-[#000080] text-black font-bold' : 'bg-[#c0c0c0] border-[#000] hover:bg-[#dfdfdf]'}`}>
               {tab}
             </button>
@@ -528,7 +668,7 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className={`max-w-4xl mx-auto px-6 py-8 tab-content ${tabAnimState}`}>
 
         {(newPostMode || editingPost) && (
           <div className="mb-8 p-6 bg-[#fffbe6] border-4 border-[#808080] shadow-[4px_4px_0_#000]">
@@ -571,7 +711,14 @@ function App() {
             <div>
               {/* 欢迎区 */}
               <div className="text-center py-10 reveal">
-                <div className="mx-auto w-24 h-24 bg-[#000080] text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-[4px_4px_0_#000]">🐱</div>
+                <div className="mx-auto w-24 h-24 bg-[#000080] text-white rounded-full flex items-center justify-center text-5xl mb-6 shadow-[4px_4px_0_#000]">
+                  <span onClick={handleCatClick} className={`cursor-pointer inline-block ${catActivated ? 'cat-activated' : ''}`} style={{ lineHeight: 1 }}>🐱</span>
+                </div>
+                {catActivated && (
+                  <div className="mx-auto max-w-md bg-black text-[#00cc44] font-bbs text-xs p-3 border border-[#00cc44] mb-4">
+                    <span className="terminal-cursor">&gt; CHEAT CODE ACTIVATED: +9 LIVES</span>
+                  </div>
+                )}
                 <h2 className="text-3xl mb-4">欢迎来到我的个人网站</h2>
                 <p className="text-lg max-w-md mx-auto">这里记录我对学习、生活的一些思考。<br />欢迎交流～</p>
               </div>
@@ -664,6 +811,80 @@ function App() {
                       ))}
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* ── 项目展示区 ── */}
+              <div className="border-2 border-black shadow-[2px_2px_0_#000] bg-[#c0c0c0] mt-6">
+                <div className="bg-[#000080] text-white px-3 py-1 flex justify-between items-center">
+                  <span className="text-sm font-bold">📂 项目展示 / Projects</span>
+                  {isAdmin && (
+                    <button onClick={() => { setNewProjectMode(true); setEditingProject(null); setProjectForm({ name: '', description: '', tech_stack: '', github_url: '', demo_url: '', cover_url: '', sort_order: 0 }); }}
+                      className="text-[10px] bg-[#c0c0c0] text-black border border-white px-2 hover:bg-white">+ 添加项目</button>
+                  )}
+                </div>
+                <div className="p-4">
+                  {(newProjectMode || editingProject) && (
+                    <div className="border-2 border-black bg-white p-3 mb-4">
+                      <h4 className="text-xs font-bold mb-2">{editingProject ? '编辑项目' : '添加项目'}</h4>
+                      <input value={projectForm.name} onChange={e => setProjectForm({ ...projectForm, name: e.target.value })} placeholder="项目名称" className="w-full border border-black p-1 text-xs mb-1 focus:outline-none" />
+                      <textarea value={projectForm.description} onChange={e => setProjectForm({ ...projectForm, description: e.target.value })} placeholder="项目简介" className="w-full border border-black p-1 text-xs mb-1 focus:outline-none" rows="2" />
+                      <input value={projectForm.tech_stack} onChange={e => setProjectForm({ ...projectForm, tech_stack: e.target.value })} placeholder="技术栈（逗号分隔）" className="w-full border border-black p-1 text-xs mb-1 focus:outline-none" />
+                      <input value={projectForm.github_url} onChange={e => setProjectForm({ ...projectForm, github_url: e.target.value })} placeholder="GitHub URL" className="w-full border border-black p-1 text-xs mb-1 focus:outline-none" />
+                      <input value={projectForm.demo_url} onChange={e => setProjectForm({ ...projectForm, demo_url: e.target.value })} placeholder="Demo URL" className="w-full border border-black p-1 text-xs mb-1 focus:outline-none" />
+                      <input value={projectForm.cover_url} onChange={e => setProjectForm({ ...projectForm, cover_url: e.target.value })} placeholder="封面图 URL" className="w-full border border-black p-1 text-xs mb-1 focus:outline-none" />
+                      <input type="number" value={projectForm.sort_order} onChange={e => setProjectForm({ ...projectForm, sort_order: e.target.value })} placeholder="排序权重" className="w-full border border-black p-1 text-xs mb-2 focus:outline-none" />
+                      <div className="flex gap-2">
+                        <button onClick={handleSaveProject} className="bg-[#000080] text-white px-3 py-1 text-xs border border-black hover:bg-[#0000c0]">保存</button>
+                        <button onClick={() => { setNewProjectMode(false); setEditingProject(null); }} className="bg-[#c0c0c0] px-3 py-1 text-xs border border-black">取消</button>
+                      </div>
+                    </div>
+                  )}
+                  {projects.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {projects.map(p => (
+                        <div key={p.id} className="project-card border-2 border-black shadow-[2px_2px_0_#000] bg-[#c0c0c0]">
+                          <div className="bg-[#000080] text-white px-2 py-1 flex justify-between items-center">
+                            <span className="text-xs font-bold truncate">{p.name}</span>
+                            <div className="flex gap-1">
+                              <span className="titlebar-btn">_</span>
+                              <span className="titlebar-btn">□</span>
+                              <span className="titlebar-btn">×</span>
+                            </div>
+                          </div>
+                          {p.cover_url && (
+                            <img src={p.cover_url} alt={p.name} className="w-full h-40 object-cover border-b-2 border-black" />
+                          )}
+                          <div className="p-3">
+                            <p className="text-xs mb-2">{p.description}</p>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {p.tech_stack?.map((tech, i) => (
+                                <span key={i} className="tech-badge bg-[#ffcc00] text-black px-2 py-0.5 text-[10px] font-bold border border-black shadow-[1px_1px_0_#000]">{tech}</span>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              {p.github_url && (
+                                <a href={p.github_url} target="_blank" rel="noopener noreferrer"
+                                  className="bg-[#c0c0c0] border-2 border-black shadow-[2px_2px_0_#000] px-3 py-1 text-xs hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#000] transition-all">GitHub →</a>
+                              )}
+                              {p.demo_url && (
+                                <a href={p.demo_url} target="_blank" rel="noopener noreferrer"
+                                  className="bg-[#c0c0c0] border-2 border-black shadow-[2px_2px_0_#000] px-3 py-1 text-xs hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#000] transition-all">Demo →</a>
+                              )}
+                            </div>
+                          </div>
+                          {isAdmin && (
+                            <div className="border-t-2 border-black p-2 flex gap-2">
+                              <button onClick={() => startEditProject(p)} className="text-[10px] bg-[#c0c0c0] border border-black px-2 py-0.5 hover:bg-white">编辑</button>
+                              <button onClick={() => handleDeleteProject(p.id)} className="text-[10px] bg-red-200 border border-black px-2 py-0.5 hover:bg-red-300">删除</button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    !newProjectMode && <p className="text-xs text-gray-500 font-bbs">暂无项目 / No projects yet.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -795,6 +1016,7 @@ function App() {
                         ))
                       )}
                     </div>
+                    <TerminalFeedback message={postTerminalFeedback.message} visible={postTerminalFeedback.visible} />
                     <div className="bg-[#dfdfdf] p-6 border-2 border-black shadow-[3px_3px_0_#000]">
                       <div className="space-y-4">
                         <div>
@@ -902,6 +1124,7 @@ function App() {
                 <span className="text-xs opacity-75 border border-white/40 px-2 py-0.5">共 {commentTree.length} 楼</span>
               </div>
 
+              <TerminalFeedback message={msgTerminalFeedback.message} visible={msgTerminalFeedback.visible} />
               <div className="bg-[#f8f4e8] border-4 border-[#808080] p-8 shadow-[3px_3px_0_#000] mb-8">
                 <div className="space-y-5">
                   <div>
@@ -1063,6 +1286,7 @@ function App() {
       </main>
 
       <footer className="border-t-4 border-[#808080] mt-12">
+        <div className="footer-pixel-line"></div>
         {/* 建议08: 友情链接区 */}
         <div className="bg-[#e8e8e8] border-b-2 border-[#808080] px-6 py-5">
           <div className="max-w-4xl mx-auto">

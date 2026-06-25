@@ -27,3 +27,6 @@ dist-ssr
 node_modules/
 dist/
 build/
+
+CLAUDE.md
+docs/*

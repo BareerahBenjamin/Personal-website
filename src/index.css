@@ -366,3 +366,71 @@ body {
   font-size: 11px;
   color: #996600;
 }
+
+/* ── 2a. 全局点击像素涟漪 ─────────────── */
+@keyframes pixel-ripple {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+.pixel-burst {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: pixel-ripple 0.4s ease-out forwards;
+}
+
+/* ── 2b. Tab 切换滑动过渡 ─────────────── */
+.tab-content {
+  transition: opacity 0.25s ease-out, transform 0.3s ease-out;
+}
+.tab-content.entering {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.tab-content.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── 2c. 终端反馈打字机 ─────────────── */
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+.terminal-cursor {
+  animation: terminal-blink 0.7s step-end infinite;
+}
+
+/* ── 2e. 页脚复古装饰线 ─────────────── */
+.footer-pixel-line {
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    #808080 0px, #808080 4px,
+    transparent 4px, transparent 8px
+  );
+}
+
+/* ── 2f. 猫咪彩蛋 ─────────────── */
+@keyframes cat-bounce {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(2.2); }
+}
+@keyframes fish-fly {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--fx), var(--fy)) scale(0.5); opacity: 0; }
+}
+.cat-activated {
+  animation: cat-bounce 0.6s ease-in-out;
+}
+
+/* ── 项目展示卡片 hover ─────────────── */
+.project-card {
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.project-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 black !important;
+}
